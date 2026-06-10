@@ -1,33 +1,27 @@
 import { create } from "zustand";
-import { createClient } from "@/lib/supabase/client";
-import type { Profile } from "@/types";
+import { persist } from "zustand/middleware";
 
-interface AuthState {
-  profile: Profile | null;
-  loading: boolean;
-  fetchProfile: () => Promise<void>;
-  setProfile: (profile: Profile | null) => void;
-  signOut: () => Promise<void>;
+interface SettingsState {
+  fuelPriceSek: number;
+  consumptionLiterPerHour: number;
+  reservePercent: number;
+  load: () => void;
+  setFuelPrice: (price: number) => void;
+  setConsumption: (liters: number) => void;
+  setReservePercent: (pct: number) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  profile: null,
-  loading: false,
-
-  setProfile: (profile) => set({ profile }),
-
-  fetchProfile: async () => {
-    set({ loading: true });
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { set({ profile: null, loading: false }); return; }
-    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-    set({ profile: (data as Profile) ?? null, loading: false });
-  },
-
-  signOut: async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    set({ profile: null });
-  },
-}));
+export const useSettingsStore = create<SettingsState>()(
+  persist(
+    (set) => ({
+      fuelPriceSek: 22,
+      consumptionLiterPerHour: 20,
+      reservePercent: 20,
+      load: () => { /* hydrated by zustand/persist automatically */ },
+      setFuelPrice: (fuelPriceSek) => set({ fuelPriceSek }),
+      setConsumption: (consumptionLiterPerHour) => set({ consumptionLiterPerHour }),
+      setReservePercent: (reservePercent) => set({ reservePercent }),
+    }),
+    { name: "marine-settings" }
+  )
+);
