@@ -1,8 +1,9 @@
-
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ===== Holographic marine layer ===== */
 @layer components {
-  /* Panel with animated holo border + scanlines */
   .holo-panel {
     @apply relative rounded-card shadow-glass backdrop-blur-xl;
     background:
@@ -23,7 +24,6 @@
       transparent 4px
     );
   }
-
   .holo-grid {
     background-image:
       linear-gradient(rgba(45,224,190,0.06) 1px, transparent 1px),
@@ -31,12 +31,9 @@
     background-size: 28px 28px;
     mask-image: radial-gradient(75% 60% at 50% 35%, black 30%, transparent 100%);
   }
-
   .glow-text {
     text-shadow: 0 0 14px rgba(45, 224, 190, 0.55);
   }
-
-  /* Radar sweep (dashboard signature) */
   .radar {
     @apply relative overflow-hidden rounded-full border border-sonar/25;
     background:
@@ -61,7 +58,6 @@
   initial-value: 0deg;
   inherits: false;
 }
-
 @keyframes holo-rotate {
   to { --holo-angle: 360deg; }
 }
