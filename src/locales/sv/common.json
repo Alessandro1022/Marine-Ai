@@ -1,0 +1,188 @@
+{
+  "app": {
+    "name": "Empire Marine AI",
+    "tagline": "Din intelligenta marina assistent",
+    "copyright": "© Aetos Systems"
+  },
+  "common": {
+    "loading": "Laddar…",
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "delete": "Ta bort",
+    "edit": "Redigera",
+    "add": "Lägg till",
+    "search": "Sök",
+    "back": "Tillbaka",
+    "next": "Nästa",
+    "done": "Klar",
+    "retry": "Försök igen",
+    "error": "Något gick fel. Försök igen.",
+    "empty": "Inget här ännu."
+  },
+  "auth": {
+    "welcomeTitle": "Välkommen ombord",
+    "welcomeSubtitle": "Väder, rutter, bränsle och underhåll — samlat i en assistent.",
+    "login": "Logga in",
+    "register": "Skapa konto",
+    "logout": "Logga ut",
+    "email": "E-post",
+    "password": "Lösenord",
+    "confirmPassword": "Bekräfta lösenord",
+    "firstName": "Förnamn",
+    "lastName": "Efternamn",
+    "forgotPassword": "Glömt lösenord?",
+    "resetPassword": "Återställ lösenord",
+    "sendResetLink": "Skicka återställningslänk",
+    "resetLinkSent": "Kolla din e-post — vi har skickat en återställningslänk.",
+    "newPassword": "Nytt lösenord",
+    "updatePassword": "Uppdatera lösenord",
+    "verifyEmailTitle": "Verifiera din e-post",
+    "verifyEmailBody": "Vi har skickat en verifieringslänk till {{email}}. Öppna den för att aktivera kontot.",
+    "noAccount": "Har du inget konto?",
+    "hasAccount": "Har du redan ett konto?",
+    "passwordMismatch": "Lösenorden matchar inte.",
+    "invalidCredentials": "Fel e-post eller lösenord."
+  },
+  "nav": {
+    "home": "Hem",
+    "map": "Karta",
+    "ai": "AI",
+    "logbook": "Loggbok",
+    "profile": "Profil"
+  },
+  "onboarding": {
+    "languageTitle": "Välj språk",
+    "boatTypeTitle": "Vilken typ av båt har du?",
+    "addBoatTitle": "Lägg till din båt",
+    "planTitle": "Välj prenumeration",
+    "motorboat": "Motorbåt",
+    "sailboat": "Segelbåt",
+    "fishingBoat": "Fiskebåt",
+    "pwc": "Vattenskoter",
+    "boatName": "Båtens namn",
+    "manufacturer": "Tillverkare",
+    "model": "Modell",
+    "year": "Årsmodell",
+    "fuelCapacity": "Bränslekapacitet (liter)",
+    "cruiseSpeed": "Marschfart (knop)",
+    "enterDashboard": "Öppna instrumentpanelen"
+  },
+  "home": {
+    "currentWeather": "Aktuellt väder",
+    "wind": "Vind",
+    "waves": "Våghöjd",
+    "temperature": "Temperatur",
+    "visibility": "Sikt",
+    "boatStatus": "Båtstatus",
+    "fuelStatus": "Bränsle",
+    "upcomingMaintenance": "Kommande underhåll",
+    "recentTrips": "Senaste turer",
+    "aiRecommendations": "AI-rekommendationer",
+    "quickActions": "Snabbåtgärder",
+    "riskGreen": "Bra förhållanden",
+    "riskYellow": "Var uppmärksam",
+    "riskRed": "Avrådan — stanna i hamn"
+  },
+  "ai": {
+    "title": "Marin AI-assistent",
+    "placeholder": "Fråga om väder, rutter, bränsle eller underhåll…",
+    "suggested1": "Kan jag åka från Vaxholm till Sandhamn imorgon?",
+    "suggested2": "Hur mycket bränsle går det åt på 25 distansminuter?",
+    "suggested3": "När bör jag serva motorn?",
+    "suggested4": "Är det säkert att ge sig ut idag?",
+    "thinking": "Analyserar…"
+  },
+  "map": {
+    "title": "Karta",
+    "marinas": "Marinor",
+    "fuelStations": "Bränslestationer",
+    "favorites": "Favoriter",
+    "myLocation": "Min position"
+  },
+  "boats": {
+    "title": "Mina båtar",
+    "addBoat": "Lägg till båt",
+    "boatType": "Båttyp",
+    "engineType": "Motortyp",
+    "notes": "Anteckningar",
+    "noBoats": "Du har inte lagt till någon båt ännu."
+  },
+  "maintenance": {
+    "title": "Underhåll",
+    "addMaintenance": "Lägg till underhåll",
+    "oilChange": "Oljebyte",
+    "engineService": "Motorservice",
+    "batteryReplacement": "Batteribyte",
+    "impellerReplacement": "Impellerbyte",
+    "hullCleaning": "Bottentvätt",
+    "winterStorage": "Vinterförvaring",
+    "dueDate": "Förfallodatum",
+    "history": "Servicehistorik",
+    "overdue": "Försenat"
+  },
+  "logbook": {
+    "title": "Loggbok",
+    "addTrip": "Logga tur",
+    "startLocation": "Startplats",
+    "destination": "Destination",
+    "distance": "Distans",
+    "duration": "Tid",
+    "fuelUsed": "Bränsle",
+    "weather": "Väder",
+    "statistics": "Statistik",
+    "noTrips": "Inga turer loggade ännu."
+  },
+  "marinas": {
+    "title": "Marinor",
+    "fuel": "Bränsle",
+    "restaurant": "Restaurang",
+    "electricity": "El",
+    "guestHarbor": "Gästhamn",
+    "water": "Vatten",
+    "wifi": "WiFi"
+  },
+  "safety": {
+    "title": "Säkerhetscenter",
+    "weatherWarnings": "Vädervarningar",
+    "lowFuel": "Lågt bränsle",
+    "emergencyChecklist": "Nödchecklista",
+    "emergencyContacts": "Nödkontakter",
+    "sos": "SOS-information",
+    "sosNumber": "Sjöräddning: 112 — begär JRCC"
+  },
+  "profile": {
+    "title": "Profil",
+    "editProfile": "Redigera profil",
+    "language": "Språk",
+    "subscription": "Prenumeration",
+    "boats": "Båthantering",
+    "changePassword": "Byt lösenord",
+    "notifications": "Notiser",
+    "deleteAccount": "Radera konto",
+    "deleteConfirm": "Är du säker? Detta går inte att ångra."
+  },
+  "plans": {
+    "free": "Free",
+    "pro": "Pro",
+    "premium": "Premium",
+    "freeDesc": "Begränsad AI, basväder, en båt",
+    "proDesc": "Obegränsad AI, ruttplanering, bränslekalkylator, flera båtar",
+    "premiumDesc": "Avancerad AI, avancerat väder, smarta säkerhetsvarningar",
+    "current": "Nuvarande plan",
+    "upgrade": "Uppgradera"
+  },
+  "route": {
+    "title": "Ruttplanerare",
+    "eta": "Beräknad ankomst",
+    "fuelEstimate": "Bränsleestimat",
+    "weatherRisk": "Väderrisk",
+    "generateReport": "Skapa ruttrapport"
+  },
+  "fuel": {
+    "title": "Bränslekalkylator",
+    "consumption": "Förbrukning",
+    "costEstimate": "Kostnad",
+    "safetyReserve": "Säkerhetsreserv",
+    "calculate": "Beräkna"
+  }
+}

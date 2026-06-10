@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-abyss text-foam font-body antialiased;
+  background-image: radial-gradient(
+      120% 90% at 50% 0%,
+      #11283a 0%,
+      #0b1a26 45%,
+      #060d14 100%
+    );
+  background-attachment: fixed;
+}
+
+@layer components {
+  /* Glassmorphism card */
+  .glass-card {
+    @apply rounded-card border border-white/10 bg-hull/60 shadow-glass backdrop-blur-xl;
+    background-image: linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.015) 40%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+
+  /* Chartplotter-style data readout (the app's signature) */
+  .instrument {
+    @apply font-instrument tabular-nums tracking-tight text-foam;
+  }
+  .instrument-label {
+    @apply font-instrument text-[0.65rem] uppercase tracking-[0.18em] text-mist;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-sonar px-6 py-3
+      font-display text-sm font-semibold uppercase tracking-wider text-abyss
+      transition-transform active:scale-[0.97] disabled:opacity-40;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/15
+      px-6 py-3 font-display text-sm font-semibold uppercase tracking-wider text-foam
+      transition-colors active:bg-white/5 disabled:opacity-40;
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-white/10 bg-deep/80 px-4 py-3 text-foam
+      placeholder:text-mist/60 outline-none transition-colors
+      focus:border-sonar/60 focus:ring-2 focus:ring-sonar/20;
+  }
+
+  .risk-dot {
+    @apply inline-block h-2.5 w-2.5 rounded-full;
+  }
+  .risk-dot-green {
+    @apply risk-dot bg-risk-green shadow-[0_0_10px_rgba(52,211,153,0.7)];
+  }
+  .risk-dot-yellow {
+    @apply risk-dot bg-risk-yellow shadow-[0_0_10px_rgba(251,191,36,0.7)];
+  }
+  .risk-dot-red {
+    @apply risk-dot bg-risk-red shadow-[0_0_10px_rgba(248,113,113,0.7)];
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
