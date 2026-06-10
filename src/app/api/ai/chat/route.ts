@@ -1,4 +1,3 @@
-
 import { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
@@ -69,7 +68,8 @@ async function streamGemini(messages: Msg[], system: string) {
   if (!res.ok || !res.body) throw new Error(`gemini_${res.status}`);
 
   return sseToTextStream(res.body, (json) => {
-    return json?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const j = json as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+    return j?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
   });
 }
 
@@ -95,7 +95,8 @@ async function streamOpenAI(messages: Msg[], system: string) {
   if (!res.ok || !res.body) throw new Error(`openai_${res.status}`);
 
   return sseToTextStream(res.body, (json) => {
-    return json?.choices?.[0]?.delta?.content ?? "";
+    const j = json as { choices?: { delta?: { content?: string } }[] };
+    return j?.choices?.[0]?.delta?.content ?? "";
   });
 }
 
