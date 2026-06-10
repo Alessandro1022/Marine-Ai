@@ -2,16 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== Holographic marine layer ===== */
+@layer base {
+  html {
+    background-color: #060D14;
+    color: #E9F4F6;
+    font-family: var(--font-inter), sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background-color: #060D14;
+    min-height: 100dvh;
+  }
+  * {
+    box-sizing: border-box;
+  }
+}
+
 @layer components {
+
+  /* ── Cards ── */
+  .glass-card {
+    @apply relative rounded-card backdrop-blur-md;
+    background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.015) 40%, rgba(255,255,255,0) 100%),
+      rgba(17, 40, 58, 0.75);
+    border: 1px solid rgba(45, 224, 190, 0.12);
+    box-shadow: 0 4px 24px rgba(2, 8, 14, 0.5);
+  }
+
+  /* ── Holographic panel ── */
   .holo-panel {
-    @apply relative rounded-card shadow-glass backdrop-blur-xl;
+    @apply relative rounded-card backdrop-blur-xl;
     background:
       linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01) 45%, rgba(255,255,255,0)) padding-box,
-      rgba(17, 40, 58, 0.6) padding-box,
+      rgba(11, 26, 38, 0.85) padding-box,
       conic-gradient(from var(--holo-angle, 0deg), rgba(45,224,190,0.55), rgba(45,224,190,0.05) 30%, rgba(94,160,255,0.35) 55%, rgba(45,224,190,0.05) 80%, rgba(45,224,190,0.55)) border-box;
     border: 1px solid transparent;
     animation: holo-rotate 7s linear infinite;
+    box-shadow: 0 8px 32px rgba(2, 8, 14, 0.55);
   }
   .holo-panel::after {
     content: "";
@@ -24,6 +51,74 @@
       transparent 4px
     );
   }
+
+  /* ── Inputs ── */
+  .input-field {
+    @apply w-full rounded-xl px-4 py-3 text-sm outline-none transition-all;
+    background: rgba(11, 26, 38, 0.9);
+    border: 1px solid rgba(45, 224, 190, 0.18);
+    color: #E9F4F6;
+    caret-color: #2DE0BE;
+  }
+  .input-field::placeholder {
+    color: #4A6878;
+  }
+  .input-field:focus {
+    border-color: rgba(45, 224, 190, 0.5);
+    box-shadow: 0 0 0 3px rgba(45, 224, 190, 0.08);
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-semibold transition-all active:scale-[0.97] disabled:opacity-40;
+    background: linear-gradient(135deg, #2DE0BE 0%, #1EC8A8 100%);
+    color: #060D14;
+    box-shadow: 0 0 20px rgba(45, 224, 190, 0.3);
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 0 28px rgba(45, 224, 190, 0.5);
+  }
+  .btn-ghost {
+    @apply flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-medium transition-all active:scale-[0.97];
+    background: rgba(17, 40, 58, 0.7);
+    border: 1px solid rgba(45, 224, 190, 0.18);
+    color: #8FA9B8;
+  }
+  .btn-ghost:hover {
+    border-color: rgba(45, 224, 190, 0.35);
+    color: #E9F4F6;
+  }
+
+  /* ── Typography ── */
+  .instrument {
+    font-family: var(--font-jetbrains), monospace;
+    font-weight: 500;
+    color: #E9F4F6;
+    letter-spacing: 0.02em;
+  }
+  .instrument-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #4A6878;
+  }
+  .glow-text {
+    color: #E9F4F6;
+    text-shadow: 0 0 14px rgba(45, 224, 190, 0.55);
+  }
+
+  /* ── Risk dots ── */
+  .risk-dot-green,
+  .risk-dot-yellow,
+  .risk-dot-red {
+    @apply inline-block h-2 w-2 rounded-full;
+  }
+  .risk-dot-green  { background: #34D399; box-shadow: 0 0 8px rgba(52,211,153,0.7); }
+  .risk-dot-yellow { background: #FBBF24; box-shadow: 0 0 8px rgba(251,191,36,0.7); }
+  .risk-dot-red    { background: #F87171; box-shadow: 0 0 8px rgba(248,113,113,0.7); }
+
+  /* ── Holo grid ── */
   .holo-grid {
     background-image:
       linear-gradient(rgba(45,224,190,0.06) 1px, transparent 1px),
@@ -31,11 +126,11 @@
     background-size: 28px 28px;
     mask-image: radial-gradient(75% 60% at 50% 35%, black 30%, transparent 100%);
   }
-  .glow-text {
-    text-shadow: 0 0 14px rgba(45, 224, 190, 0.55);
-  }
+
+  /* ── Radar ── */
   .radar {
-    @apply relative overflow-hidden rounded-full border border-sonar/25;
+    @apply relative overflow-hidden rounded-full;
+    border: 1px solid rgba(45,224,190,0.25);
     background:
       radial-gradient(circle, rgba(45,224,190,0.07) 0%, rgba(6,13,20,0.2) 70%),
       repeating-radial-gradient(circle, transparent 0 23%, rgba(45,224,190,0.14) 23% 23.5%, transparent 23.5% 48%, rgba(45,224,190,0.14) 48% 48.5%, transparent 48.5% 73%, rgba(45,224,190,0.14) 73% 73.5%, transparent 73.5%);
@@ -48,8 +143,14 @@
   }
   .radar::after {
     content: "";
-    @apply absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sonar;
+    @apply absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full;
+    background: #2DE0BE;
     box-shadow: 0 0 12px rgba(45, 224, 190, 0.9);
+  }
+
+  /* ── Animations ── */
+  .animate-fade-up {
+    animation: fade-up 0.45s ease-out both;
   }
 }
 
@@ -58,9 +159,14 @@
   initial-value: 0deg;
   inherits: false;
 }
+
 @keyframes holo-rotate {
   to { --holo-angle: 360deg; }
 }
 @keyframes radar-spin {
   to { transform: rotate(360deg); }
+}
+@keyframes fade-up {
+  0%   { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
