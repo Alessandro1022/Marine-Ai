@@ -24,11 +24,23 @@ export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
 
 type StatusCallback = (status: "idle" | "connecting" | "open" | "closed" | "error") => void;
 
+const EMPTY: Telemetry = {
+  speedOverGroundKn: null,
+  courseOverGroundDeg: null,
+  depthM: null,
+  windSpeedApparentMs: null,
+  windAngleApparentDeg: null,
+  latitude: null,
+  longitude: null,
+};
+
 export class SignalKClient {
   private ws: WebSocket | null = null;
+  private current: Telemetry = { ...EMPTY };
 
-  connect(host: string, onData: (t: Partial<Telemetry>) => void, onStatus: StatusCallback) {
+  connect(host: string, onData: (t: Telemetry) => void, onStatus: StatusCallback) {
     onStatus("connecting");
+    this.current = { ...EMPTY };
     const url = `ws://${host}/signalk/v1/stream?subscribe=all`;
     this.ws = new WebSocket(url);
     this.ws.onopen = () => onStatus("open");
@@ -37,20 +49,19 @@ export class SignalKClient {
     this.ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data as string);
-        const result: Partial<Telemetry> = {};
         for (const update of msg?.updates ?? []) {
           for (const value of update.values ?? []) {
             switch (value.path) {
-              case "navigation.speedOverGround": result.speedOverGroundKn = value.value * 1.94384; break;
-              case "navigation.courseOverGroundTrue": result.courseOverGroundDeg = (value.value * 180) / Math.PI; break;
-              case "environment.depth.belowKeel": result.depthM = value.value; break;
-              case "environment.wind.speedApparent": result.windSpeedApparentMs = value.value; break;
-              case "environment.wind.angleApparent": result.windAngleApparentDeg = (value.value * 180) / Math.PI; break;
-              case "navigation.position": result.latitude = value.value.latitude; result.longitude = value.value.longitude; break;
+              case "navigation.speedOverGround": this.current.speedOverGroundKn = value.value * 1.94384; break;
+              case "navigation.courseOverGroundTrue": this.current.courseOverGroundDeg = (value.value * 180) / Math.PI; break;
+              case "environment.depth.belowKeel": this.current.depthM = value.value; break;
+              case "environment.wind.speedApparent": this.current.windSpeedApparentMs = value.value; break;
+              case "environment.wind.angleApparent": this.current.windAngleApparentDeg = (value.value * 180) / Math.PI; break;
+              case "navigation.position": this.current.latitude = value.value.latitude; this.current.longitude = value.value.longitude; break;
             }
           }
         }
-        if (Object.keys(result).length > 0) onData(result);
+        onData({ ...this.current });
       } catch { /* ignore */ }
     };
   }
