@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, WMSTileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useQuery } from "@tanstack/react-query";
@@ -39,6 +39,9 @@ const EMODNET_URL =
 const ENIRO_URL =
   "https://map.eniro.com/geowebcache/service/tms1.0.0/nautical/{z}/{x}/{y}.png";
 const SEAMARK_URL = "https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png";
+// EMODnet WMS renders depth contour lines (isobaths) at ANY zoom level —
+// this is what makes the chart readable close-in where raster tiles stop.
+const CONTOURS_WMS = "https://ows.emodnet-bathymetry.eu/wms";
 const DARK_URL =
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
@@ -170,33 +173,58 @@ export default function MarineMap() {
       <MapContainer
         center={[geo.lat, geo.lon]}
         zoom={9}
-        style={{ height: "100%", width: "100%", background: "#0B1A26" }}
+        style={{ height: "100%", width: "100%", background: "#BFD8E5" }}
         attributionControl={false}
+        preferCanvas
+        zoomSnap={0.5}
+        zoomDelta={0.5}
+        wheelPxPerZoomLevel={90}
         ref={mapRef}
       >
         {store.base === "dark" ? (
-          <TileLayer url={DARK_URL} maxZoom={18} />
+          <TileLayer url={DARK_URL} maxZoom={18} keepBuffer={4} />
         ) : store.base === "eniro" ? (
           <>
             {/* Fallback under Eniro so missing tiles never leave holes */}
-            <TileLayer url={LAND_BASE_URL} maxZoom={18} />
-            <TileLayer url={ENIRO_URL} tms maxZoom={17} opacity={1} />
+            <TileLayer url={LAND_BASE_URL} maxZoom={18} keepBuffer={4} className="land-base" />
+            <TileLayer url={ENIRO_URL} tms maxZoom={17} opacity={1} keepBuffer={4} />
           </>
         ) : (
           <>
-            <TileLayer url={LAND_BASE_URL} maxZoom={18} />
+            {/* Land in chart-beige */}
+            <TileLayer
+              url={LAND_BASE_URL}
+              maxZoom={18}
+              keepBuffer={4}
+              detectRetina
+              className="land-base"
+            />
             {store.showDepth ? (
-              <TileLayer
-                url={EMODNET_URL}
-                maxNativeZoom={12}
-                maxZoom={18}
-                opacity={0.72}
-              />
+              <>
+                {/* Depth shading multiplied into the water: lighter = shallow,
+                    darker blue = deep (Navionics-style banding) */}
+                <TileLayer
+                  url={EMODNET_URL}
+                  maxNativeZoom={12}
+                  maxZoom={18}
+                  keepBuffer={4}
+                  className="depth-layer"
+                />
+                {/* Vector-rendered isobath lines — sharp at every zoom */}
+                <WMSTileLayer
+                  url={CONTOURS_WMS}
+                  layers="emodnet:contours"
+                  format="image/png"
+                  transparent
+                  maxZoom={18}
+                  className="contour-layer"
+                />
+              </>
             ) : null}
           </>
         )}
         {store.showSeamarks ? (
-          <TileLayer url={SEAMARK_URL} maxZoom={18} minZoom={9} />
+          <TileLayer url={SEAMARK_URL} maxZoom={18} minZoom={9} keepBuffer={4} />
         ) : null}
 
         {store.showMarinas
@@ -221,6 +249,20 @@ export default function MarineMap() {
       </MapContainer>
 
       <MapControls onLocate={locate} onSetAnchorHere={setAnchorHere} />
+
+      {/* Depth legend */}
+      {store.base === "chart" && store.showDepth ? (
+        <div className="absolute left-3 top-3 z-[999] flex items-center gap-2 rounded-xl border border-white/12 bg-deep/85 px-2.5 py-1.5 backdrop-blur">
+          <span
+            className="h-2.5 w-16 rounded-full"
+            style={{
+              background:
+                "linear-gradient(90deg, #DDEFF7 0%, #9CC8E8 35%, #4E8FC7 65%, #1E4E8C 100%)",
+            }}
+          />
+          <span className="instrument-label">{t("chart.depthLegend")}</span>
+        </div>
+      ) : null}
 
       {/* SOG/COG instrument chip */}
       <div className="absolute bottom-3 left-3 z-[999] rounded-xl border border-white/12 bg-deep/85 px-3 py-2 backdrop-blur">

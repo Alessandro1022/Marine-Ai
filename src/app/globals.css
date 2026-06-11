@@ -185,3 +185,19 @@ body {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-3px); }
 }
+
+/* ===== Sea chart rendering (Navionics-style) ===== */
+.land-base {
+  filter: sepia(0.28) saturate(0.85) brightness(1.05) contrast(0.98);
+}
+.depth-layer {
+  mix-blend-mode: multiply;
+  filter: saturate(1.85) contrast(1.25) brightness(1.06) hue-rotate(-8deg);
+}
+.contour-layer {
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+}
+.leaflet-container {
+  font-family: var(--font-body), sans-serif;
+}

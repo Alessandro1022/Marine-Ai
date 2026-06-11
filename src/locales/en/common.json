@@ -257,6 +257,7 @@
     "baseChart": "Sea chart (land + depth)",
     "baseEniro": "Eniro nautical (beta)",
     "baseDark": "Dark mode",
-    "layerDepth": "Depth shading"
+    "layerDepth": "Depth shading",
+    "depthLegend": "shallow → deep"
   }
 }

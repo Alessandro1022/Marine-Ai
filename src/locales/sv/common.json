@@ -257,6 +257,7 @@
     "baseChart": "Sjökort (land + djup)",
     "baseEniro": "Eniro sjökort (beta)",
     "baseDark": "Mörkt läge",
-    "layerDepth": "Djupskuggning"
+    "layerDepth": "Djupskuggning",
+    "depthLegend": "grunt → djupt"
   }
 }
