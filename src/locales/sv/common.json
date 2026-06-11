@@ -252,6 +252,11 @@
     "routeCrosses": "rutten korsar området",
     "routeNear": "passerar {{meters}} m från området",
     "activeNow": "aktivt nu",
-    "disclaimer": "Ej för navigation — verifiera mot officiella sjökort"
+    "disclaimer": "Ej för navigation — verifiera mot officiella sjökort",
+    "baseLayer": "Baskort",
+    "baseChart": "Sjökort (land + djup)",
+    "baseEniro": "Eniro sjökort (beta)",
+    "baseDark": "Mörkt läge",
+    "layerDepth": "Djupskuggning"
   }
 }
