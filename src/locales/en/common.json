@@ -225,5 +225,33 @@
     "status_open": "Connected",
     "status_closed": "Disconnected",
     "status_error": "Error"
+  },
+  "chart": {
+    "title": "Sea chart",
+    "subtitle": "EMODnet bathymetry + OpenSeaMap seamarks",
+    "aiPanel": "AI chart analysis",
+    "readChart": "Read the chart",
+    "ecoAnalysis": "Eco route analysis",
+    "layers": "Layers",
+    "layerSeamarks": "Seamarks",
+    "layerMarinas": "Marinas",
+    "layerProtected": "Protected areas",
+    "layerDark": "Dark base map",
+    "modeRoute": "Route mode",
+    "modeMeasure": "Measure distance",
+    "anchorWatch": "Anchor watch",
+    "tapRoute": "Tap: start → destination",
+    "tapMeasure": "Tap to add points",
+    "birdProtection": "Bird protection area",
+    "sealProtection": "Seal protection area",
+    "natura2000": "Natura 2000",
+    "natureReserve": "Nature reserve",
+    "noAnchor": "No anchoring (seagrass)",
+    "speedLimit": "Speed limit",
+    "offSeason": "Off-season right now",
+    "routeCrosses": "route crosses the area",
+    "routeNear": "passes {{meters}} m from the area",
+    "activeNow": "active now",
+    "disclaimer": "Not for navigation — verify against official charts"
   }
 }

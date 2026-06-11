@@ -225,5 +225,33 @@
     "status_open": "Ansluten",
     "status_closed": "Frånkopplad",
     "status_error": "Fel"
+  },
+  "chart": {
+    "title": "Sjökort",
+    "subtitle": "EMODnet djupdata + OpenSeaMap sjömärken",
+    "aiPanel": "AI-sjökortsanalys",
+    "readChart": "Läs sjökortet",
+    "ecoAnalysis": "Miljöanalys av rutt",
+    "layers": "Lager",
+    "layerSeamarks": "Sjömärken",
+    "layerMarinas": "Marinor",
+    "layerProtected": "Skyddade områden",
+    "layerDark": "Mörk baskarta",
+    "modeRoute": "Ruttläge",
+    "modeMeasure": "Mät distans",
+    "anchorWatch": "Ankarvakt",
+    "tapRoute": "Tryck: start → mål",
+    "tapMeasure": "Tryck för mätpunkter",
+    "birdProtection": "Fågelskyddsområde",
+    "sealProtection": "Sälskyddsområde",
+    "natura2000": "Natura 2000",
+    "natureReserve": "Naturreservat",
+    "noAnchor": "Ankringsförbud (ålgräs)",
+    "speedLimit": "Fartbegränsning",
+    "offSeason": "Utanför säsong just nu",
+    "routeCrosses": "rutten korsar området",
+    "routeNear": "passerar {{meters}} m från området",
+    "activeNow": "aktivt nu",
+    "disclaimer": "Ej för navigation — verifiera mot officiella sjökort"
   }
 }
