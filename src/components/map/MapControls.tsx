@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   Layers, Route, Ruler, Anchor, Navigation, Eraser, MapIcon,
 } from "lucide-react";
-import { useMapStore, type MapMode } from "@/stores/mapStore";
+import { useMapStore, type MapMode, type BaseLayer } from "@/stores/mapStore";
 import { useT } from "@/lib/i18n";
 
 export function MapControls({
@@ -79,7 +79,35 @@ export function MapControls({
 
       {/* Layer panel */}
       {showLayers ? (
-        <div className="glass-card absolute right-14 top-3 z-[999] flex w-44 flex-col gap-2 p-3">
+        <div className="glass-card absolute right-14 top-3 z-[999] flex w-48 flex-col gap-2.5 p-3">
+          <span className="instrument-label">{t("chart.baseLayer")}</span>
+          {(
+            [
+              { id: "chart", key: "chart.baseChart" },
+              { id: "eniro", key: "chart.baseEniro" },
+              { id: "dark", key: "chart.baseDark" },
+            ] as { id: BaseLayer; key: string }[]
+          ).map((b) => (
+            <button
+              key={b.id}
+              onClick={() => store.setBase(b.id)}
+              className={`rounded-lg border px-2.5 py-1.5 text-left text-xs transition-colors ${
+                store.base === b.id
+                  ? "border-sonar/60 bg-sonar/10 text-sonar"
+                  : "border-white/10 text-mist"
+              }`}
+            >
+              {t(b.key)}
+            </button>
+          ))}
+          <span className="instrument-label mt-1">{t("chart.layers")}</span>
+          {store.base === "chart" ? (
+            <LayerToggle
+              label={t("chart.layerDepth")}
+              checked={store.showDepth}
+              onChange={() => store.toggle("showDepth")}
+            />
+          ) : null}
           <LayerToggle
             label={t("chart.layerSeamarks")}
             checked={store.showSeamarks}
@@ -94,11 +122,6 @@ export function MapControls({
             label={t("chart.layerProtected")}
             checked={store.showProtected}
             onChange={() => store.toggle("showProtected")}
-          />
-          <LayerToggle
-            label={t("chart.layerDark")}
-            checked={store.darkBase}
-            onChange={() => store.toggle("darkBase")}
           />
         </div>
       ) : null}
