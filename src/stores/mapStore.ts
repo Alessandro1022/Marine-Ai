@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 export type MapMode = "explore" | "route" | "measure" | "anchor";
+export type BaseLayer = "chart" | "eniro" | "dark";
 
 export interface LatLng {
   lat: number;
@@ -11,25 +12,26 @@ interface MapState {
   mode: MapMode;
   setMode: (m: MapMode) => void;
 
-  // Layer toggles
+  base: BaseLayer;
+  setBase: (b: BaseLayer) => void;
+
   showSeamarks: boolean;
   showMarinas: boolean;
   showProtected: boolean;
-  darkBase: boolean;
-  toggle: (k: "showSeamarks" | "showMarinas" | "showProtected" | "darkBase") => void;
+  showDepth: boolean;
+  toggle: (
+    k: "showSeamarks" | "showMarinas" | "showProtected" | "showDepth"
+  ) => void;
 
-  // Route mode
   routeStart: LatLng | null;
   routeEnd: LatLng | null;
   setRoutePoint: (p: LatLng) => void;
   clearRoute: () => void;
 
-  // Measure mode
   measurePoints: LatLng[];
   addMeasurePoint: (p: LatLng) => void;
   clearMeasure: () => void;
 
-  // Anchor watch
   anchor: (LatLng & { radiusM: number }) | null;
   setAnchor: (a: (LatLng & { radiusM: number }) | null) => void;
 }
@@ -38,10 +40,13 @@ export const useMapStore = create<MapState>((set, get) => ({
   mode: "explore",
   setMode: (mode) => set({ mode }),
 
+  base: "chart",
+  setBase: (base) => set({ base }),
+
   showSeamarks: true,
   showMarinas: true,
   showProtected: true,
-  darkBase: false,
+  showDepth: true,
   toggle: (k) => set({ [k]: !get()[k] } as Partial<MapState>),
 
   routeStart: null,
