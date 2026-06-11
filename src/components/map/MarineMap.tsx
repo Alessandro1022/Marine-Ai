@@ -27,13 +27,35 @@ import { MapAIPanel } from "./MapAIPanel";
 import { MapControls } from "./MapControls";
 import type { Marina } from "@/types";
 
-// Chart layer stack (all free):
-//  - "chart": light land base at every zoom + EMODnet depth shading overlay
-//  - "eniro": Eniro nautical raster (Sjöfartsverket-based, real chart look).
-//             Third-party service — availability not guaranteed.
-//  - "dark": dark base for night mode
+// ─────────────────────────────────────────────────────────────────────────────
+// "Chart Pro" layer stack — best-in-class FREE + LEGAL sources, combined:
+//
+//   1. LAND      CARTO Voyager (OpenStreetMap data) → the most accurate island/
+//                skerry geometry available for the Swedish archipelago.
+//                Tinted chart-beige via the .land-base CSS class.
+//   2. DEPTH     EMODnet Bathymetry raster → official European depth model
+//                (Sjöfartsverket is a contributing partner). Navionics-style
+//                depth band shading, blended into the water.
+//   3. CONTOURS  EMODnet WMS isobaths → server-rendered vector lines, razor
+//                sharp at EVERY zoom level (this is what keeps the chart
+//                readable past the raster's native zoom 12).
+//   4. LABELS    CARTO label tiles → island/place names rendered like on a
+//                real chart (Nötö, Krossholmen, ...). Sits above depth,
+//                below seamarks.
+//   5. SEAMARKS  OpenSeaMap → international buoyage, lights, sectors,
+//                fairways. The only free worldwide seamark renderer.
+//
+// Smoothness rules applied to EVERY tile layer:
+//   - keepBuffer={6}              keep tiles around the viewport cached
+//   - updateWhenZooming={false}   never reload mid-pinch (kills the jank)
+//   - updateWhenIdle={false}      start loading immediately on pan
+//   - maxNativeZoom set per layer so tiles UPSCALE instead of vanishing
+//     when you zoom past their native resolution (no more "holes")
+// ─────────────────────────────────────────────────────────────────────────────
 const LAND_BASE_URL =
   "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png";
+const LABELS_URL =
+  "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png";
 const EMODNET_URL =
   "https://tiles.emodnet-bathymetry.eu/2020/baselayer/web_mercator/{z}/{x}/{y}.png";
 const ENIRO_URL =
@@ -44,6 +66,13 @@ const SEAMARK_URL = "https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png";
 const CONTOURS_WMS = "https://ows.emodnet-bathymetry.eu/wms";
 const DARK_URL =
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+
+// Shared smooth-zoom options for all raster layers
+const SMOOTH = {
+  keepBuffer: 6,
+  updateWhenZooming: false,
+  updateWhenIdle: false,
+} as const;
 
 const marinaIcon = L.divIcon({
   className: "",
@@ -179,52 +208,89 @@ export default function MarineMap() {
         zoomSnap={0.5}
         zoomDelta={0.5}
         wheelPxPerZoomLevel={90}
+        fadeAnimation
         ref={mapRef}
       >
         {store.base === "dark" ? (
-          <TileLayer url={DARK_URL} maxZoom={18} keepBuffer={4} />
+          <TileLayer url={DARK_URL} maxZoom={18} maxNativeZoom={18} zIndex={1} {...SMOOTH} />
         ) : store.base === "eniro" ? (
           <>
             {/* Fallback under Eniro so missing tiles never leave holes */}
-            <TileLayer url={LAND_BASE_URL} maxZoom={18} keepBuffer={4} className="land-base" />
-            <TileLayer url={ENIRO_URL} tms maxZoom={17} opacity={1} keepBuffer={4} />
-          </>
-        ) : (
-          <>
-            {/* Land in chart-beige */}
             <TileLayer
               url={LAND_BASE_URL}
               maxZoom={18}
-              keepBuffer={4}
-              detectRetina
+              maxNativeZoom={18}
+              zIndex={1}
               className="land-base"
+              {...SMOOTH}
+            />
+            <TileLayer
+              url={ENIRO_URL}
+              tms
+              maxZoom={18}
+              maxNativeZoom={17}
+              opacity={1}
+              zIndex={2}
+              {...SMOOTH}
+            />
+          </>
+        ) : (
+          <>
+            {/* 1. Exact island geometry (OSM data) tinted chart-beige */}
+            <TileLayer
+              url={LAND_BASE_URL}
+              maxZoom={18}
+              maxNativeZoom={18}
+              detectRetina
+              zIndex={1}
+              className="land-base"
+              {...SMOOTH}
             />
             {store.showDepth ? (
               <>
-                {/* Depth shading multiplied into the water: lighter = shallow,
-                    darker blue = deep (Navionics-style banding) */}
+                {/* 2. Official EMODnet depth shading: lighter = shallow,
+                    darker blue = deep. Upscales past z12 instead of vanishing. */}
                 <TileLayer
                   url={EMODNET_URL}
                   maxNativeZoom={12}
                   maxZoom={18}
-                  keepBuffer={4}
+                  zIndex={2}
                   className="depth-layer"
+                  {...SMOOTH}
                 />
-                {/* Vector-rendered isobath lines — sharp at every zoom */}
+                {/* 3. Vector-rendered isobath lines — sharp at every zoom */}
                 <WMSTileLayer
                   url={CONTOURS_WMS}
                   layers="emodnet:contours"
                   format="image/png"
                   transparent
                   maxZoom={18}
+                  zIndex={3}
                   className="contour-layer"
+                  {...SMOOTH}
                 />
               </>
             ) : null}
+            {/* 4. Place names like on the official chart (islands, sounds, towns) */}
+            <TileLayer
+              url={LABELS_URL}
+              maxZoom={18}
+              maxNativeZoom={18}
+              zIndex={4}
+              {...SMOOTH}
+            />
           </>
         )}
+        {/* 5. International seamarks: buoys, lights, sectors, fairways */}
         {store.showSeamarks ? (
-          <TileLayer url={SEAMARK_URL} maxZoom={18} minZoom={9} keepBuffer={4} />
+          <TileLayer
+            url={SEAMARK_URL}
+            maxZoom={18}
+            maxNativeZoom={18}
+            minZoom={9}
+            zIndex={5}
+            {...SMOOTH}
+          />
         ) : null}
 
         {store.showMarinas
@@ -311,7 +377,7 @@ export default function MarineMap() {
 
       {/* Disclaimer + credits */}
       <p className="absolute bottom-0 left-1/2 z-[998] -translate-x-1/2 whitespace-nowrap pb-0.5 text-[0.55rem] text-mist/60">
-        {t("chart.disclaimer")} · © EMODnet · OpenSeaMap
+        {t("chart.disclaimer")} · © EMODnet · OpenSeaMap · CARTO/OSM
       </p>
     </div>
   );
