@@ -42,22 +42,18 @@ export default function MarineMap() {
 
   if (!mounted) return null;
 
-  const center: [number, number] = [lat ?? 59.32, lon ?? 18.07];
-
   return (
     <div className="holo-panel overflow-hidden" style={{ height: "calc(100dvh - 13rem)" }}>
       <MapContainer
-        center={center}
+        center={[lat, lon]}
         zoom={9}
         style={{ height: "100%", width: "100%", background: "#060D14" }}
         attributionControl={false}
       >
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-        {lat && lon ? (
-          <Marker position={[lat, lon]} icon={userIcon}>
-            <Popup>{t("map.myLocation")}</Popup>
-          </Marker>
-        ) : null}
+        <Marker position={[lat, lon]} icon={userIcon}>
+          <Popup>{t("map.myLocation")}</Popup>
+        </Marker>
         {(marinas ?? []).map((m) => (
           <Marker key={m.id} position={[m.latitude, m.longitude]} icon={marinaIcon}>
             <Popup>

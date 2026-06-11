@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect } from "react";
@@ -19,8 +18,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [initAuth, loadBoats, loadSettings]);
 
   return (
-    <div className="holo-grid min-h-dvh">
-      <main className="mx-auto max-w-md px-5 pb-28 pt-[max(env(safe-area-inset-top),1.5rem)]">
+    <div className="min-h-dvh">
+      {/* Background grid lives in its own fixed layer so it can never
+          affect positioning of other fixed elements (the tab bar). */}
+      <div className="holo-grid pointer-events-none fixed inset-0 -z-10" aria-hidden />
+      <main className="mx-auto max-w-md px-5 pb-28 pt-[max(env(safe-area-inset-top),1.25rem)]">
         {children}
       </main>
       <BottomTabBar />

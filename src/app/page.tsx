@@ -34,7 +34,7 @@ export default function WelcomePage() {
       </div>
 
       {/* Instrument preview — the signature readout */}
-      <div className="glass-card mt-10 animate-fade-up p-5 [animation-delay:120ms]">
+      <div className="holo-panel mt-10 animate-fade-up p-5 [animation-delay:120ms]">
         <div className="flex items-center justify-between">
           <span className="instrument-label">{t("home.currentWeather")}</span>
           <span className="flex items-center gap-2">

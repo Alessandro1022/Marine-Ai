@@ -1,22 +1,27 @@
 "use client";
 
-import { Bot, User } from "lucide-react";
-import type { ChatMsg } from "@/lib/ai/client";
+import { Bot } from "lucide-react";
 
-export function AIChatBubble({ role, content }: ChatMsg) {
-  const isUser = role === "user";
-  return (
-    <div className={`flex gap-2.5 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
-      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${isUser ? "bg-sonar/20 text-sonar" : "bg-white/10 text-mist"}`}>
-        {isUser ? <User size={14} /> : <Bot size={14} />}
+export function AIChatBubble({
+  role,
+  content,
+}: {
+  role: "user" | "assistant";
+  content: string;
+}) {
+  if (role === "user") {
+    return (
+      <div className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-sonar/15 border border-sonar/25 px-4 py-2.5 text-sm whitespace-pre-wrap">
+        {content}
       </div>
-      <div
-        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-          isUser
-            ? "rounded-tr-sm bg-sonar/20 text-foam"
-            : "rounded-tl-sm bg-white/5 text-foam/90"
-        } ${!content ? "animate-pulse opacity-50" : ""}`}
-      >
+    );
+  }
+  return (
+    <div className="flex max-w-[92%] gap-2.5">
+      <span className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sonar/10 text-sonar">
+        <Bot size={15} strokeWidth={1.75} />
+      </span>
+      <div className="glass-card rounded-2xl rounded-tl-md px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap">
         {content || "…"}
       </div>
     </div>

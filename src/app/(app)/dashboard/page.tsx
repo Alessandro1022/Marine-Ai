@@ -2,30 +2,42 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  Fuel, Wrench, Route, Calculator, ShieldAlert, Cable, Sparkles, ChevronRight,
-} from "lucide-react";
+import { Wrench, ChevronRight, BookOpen } from "lucide-react";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useWeather } from "@/hooks/useWeather";
-import { WeatherCard } from "@/components/cards/WeatherCard";
-import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import { useForecast } from "@/hooks/useForecast";
 import { useAuthStore } from "@/stores/authStore";
 import { useBoatStore } from "@/stores/boatStore";
-import { useI18n } from "@/lib/i18n";
+import { useT } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
-import { streamChat } from "@/lib/ai/client";
-import type { MaintenanceItem, Trip } from "@/types";
+import { GreetingHeader } from "@/components/dashboard/GreetingHeader";
+import { WindGauge } from "@/components/dashboard/WindGauge";
+import { RadarDisplay } from "@/components/dashboard/RadarDisplay";
+import { SeaStatePanel } from "@/components/dashboard/SeaStatePanel";
+import { ForecastStrip } from "@/components/dashboard/ForecastStrip";
+import { SunPanel } from "@/components/dashboard/SunPanel";
+import { FuelRangePanel } from "@/components/dashboard/FuelRangePanel";
+import { AIBriefing } from "@/components/dashboard/AIBriefing";
+import { QuickDock } from "@/components/dashboard/QuickDock";
+import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import type { MaintenanceItem, Trip, RiskLevel } from "@/types";
+
+const RISK_LABEL: Record<RiskLevel, { dot: string; text: string; key: string }> = {
+  green: { dot: "risk-dot-green", text: "text-risk-green", key: "home.riskGreen" },
+  yellow: { dot: "risk-dot-yellow", text: "text-risk-yellow", key: "home.riskYellow" },
+  red: { dot: "risk-dot-red", text: "text-risk-red", key: "home.riskRed" },
+};
 
 export default function DashboardPage() {
-  const { t, locale } = useI18n();
+  const t = useT();
   const profile = useAuthStore((s) => s.profile);
   const primaryBoat = useBoatStore((s) => s.primaryBoat());
-  const { lat, lon } = useGeolocation();
+  const { lat, lon, isFallback } = useGeolocation();
   const { data: weather, isLoading } = useWeather(lat, lon);
+  const { data: forecast } = useForecast(lat, lon);
 
   const [maintenance, setMaintenance] = useState<MaintenanceItem[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [aiTip, setAiTip] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
@@ -44,110 +56,87 @@ export default function DashboardPage() {
       .then(({ data }) => setTrips((data as Trip[]) ?? []));
   }, []);
 
-  // AI recommendation based on live conditions
-  useEffect(() => {
-    if (!weather || aiTip) return;
-    const context = `Weather now: wind ${weather.wind_speed_ms} m/s, waves ${weather.wave_height_m ?? "?"} m, temp ${weather.temperature_c}°C, visibility ${weather.visibility_m ?? "?"} m, risk: ${weather.risk}. Boat: ${primaryBoat ? `${primaryBoat.boat_type}, cruise ${primaryBoat.cruise_speed_knots ?? "?"} kn` : "unknown"}.`;
-    let text = "";
-    streamChat({
-      messages: [
-        {
-          role: "user",
-          content:
-            "Give one short, practical recommendation (max 2 sentences) for my boating today based on the context.",
-        },
-      ],
-      locale,
-      context,
-      onChunk: (c) => {
-        text += c;
-        setAiTip(text);
-      },
-    }).catch(() => setAiTip(""));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weather]);
+  if (isLoading || !weather) {
+    return (
+      <div className="flex flex-col gap-4">
+        <GreetingHeader profile={profile} lat={lat} lon={lon} isFallback={isFallback} />
+        <LoadingScreen />
+      </div>
+    );
+  }
 
-  const fuelPercent = primaryBoat?.fuel_level_percent ?? null;
+  const risk = RISK_LABEL[weather.risk];
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Header with radar */}
-      <header className="flex items-center justify-between">
-        <div>
-          <p className="instrument-label">Empire Marine AI</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold glow-text">
-            {profile ? `${t("home.greeting")}, ${profile.first_name}` : t("home.greeting")}
-          </h1>
-        </div>
-        <div className="radar h-16 w-16" />
-      </header>
+      <div className="animate-fade-up">
+        <GreetingHeader profile={profile} lat={lat} lon={lon} isFallback={isFallback} />
+      </div>
 
-      {isLoading || !weather ? <LoadingScreen /> : <WeatherCard weather={weather} />}
+      {/* Condition status line */}
+      <div className="flex items-center gap-2 animate-fade-up [animation-delay:60ms]">
+        <span className={risk.dot} />
+        <span className={`instrument-label ${risk.text}`}>{t(risk.key)}</span>
+        <span className="instrument-label ml-auto">
+          {Math.round(weather.temperature_c)}°C
+        </span>
+      </div>
 
-      {/* AI recommendation */}
-      <section className="holo-panel p-4">
-        <div className="flex items-center gap-2">
-          <Sparkles size={15} className="text-sonar" />
-          <span className="instrument-label">{t("home.aiRecommendations")}</span>
-        </div>
-        <p className="mt-2 text-sm leading-relaxed text-foam/90 whitespace-pre-wrap">
-          {aiTip || t("ai.thinking")}
-        </p>
+      {/* Instruments: wind gauge + radar */}
+      <section className="holo-panel grid grid-cols-2 items-center gap-2 p-4 animate-fade-up [animation-delay:120ms]">
+        <WindGauge
+          speedMs={weather.wind_speed_ms}
+          directionDeg={weather.wind_direction_deg}
+        />
+        <RadarDisplay lat={lat} lon={lon} />
       </section>
 
-      {/* Boat + fuel status */}
+      {/* AI captain's briefing */}
+      <div className="animate-fade-up [animation-delay:180ms]">
+        <AIBriefing
+          weather={weather}
+          hours={forecast?.hourly ?? []}
+          boat={primaryBoat}
+        />
+      </div>
+
+      {/* Sea state */}
+      <div className="animate-fade-up [animation-delay:240ms]">
+        <SeaStatePanel weather={weather} />
+      </div>
+
+      {/* 12h forecast */}
+      {forecast?.hourly?.length ? (
+        <div className="animate-fade-up [animation-delay:300ms]">
+          <ForecastStrip hours={forecast.hourly} />
+        </div>
+      ) : null}
+
+      {/* Daylight window */}
+      {forecast ? (
+        <div className="animate-fade-up [animation-delay:360ms]">
+          <SunPanel sunrise={forecast.sunrise} sunset={forecast.sunset} />
+        </div>
+      ) : null}
+
+      {/* Boat: fuel + range */}
       {primaryBoat ? (
-        <section className="glass-card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="instrument-label">{t("home.boatStatus")}</span>
-              <p className="mt-1 font-display font-semibold">{primaryBoat.name}</p>
-              <p className="text-xs text-mist">
-                {primaryBoat.manufacturer} {primaryBoat.model}{" "}
-                {primaryBoat.year ? `· ${primaryBoat.year}` : ""}
-              </p>
-            </div>
-            {fuelPercent !== null ? (
-              <div className="text-right">
-                <span className="instrument-label">{t("home.fuelStatus")}</span>
-                <p className={`instrument text-2xl ${fuelPercent < 25 ? "text-risk-red" : "text-sonar"}`}>
-                  {Math.round(fuelPercent)}%
-                </p>
-              </div>
-            ) : null}
-          </div>
-          {fuelPercent !== null ? (
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
-              <div
-                className={`h-full rounded-full ${fuelPercent < 25 ? "bg-risk-red" : "bg-sonar"} shadow-sonar`}
-                style={{ width: `${fuelPercent}%` }}
-              />
-            </div>
-          ) : null}
-        </section>
+        <div className="animate-fade-up [animation-delay:420ms]">
+          <FuelRangePanel boat={primaryBoat} />
+        </div>
       ) : null}
 
       {/* Quick actions */}
-      <section>
-        <span className="instrument-label">{t("home.quickActions")}</span>
-        <div className="mt-2 grid grid-cols-4 gap-2.5">
-          {[
-            { href: "/route-planner", icon: Route, key: "route.title" },
-            { href: "/fuel", icon: Calculator, key: "fuel.title" },
-            { href: "/safety", icon: ShieldAlert, key: "safety.title" },
-            { href: "/integrations", icon: Cable, key: "integrations.title" },
-          ].map(({ href, icon: Icon, key }) => (
-            <Link key={href} href={href} className="glass-card flex flex-col items-center gap-1.5 p-3">
-              <Icon size={19} className="text-sonar" strokeWidth={1.7} />
-              <span className="text-center text-[0.62rem] leading-tight text-mist">{t(key)}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
+      <div className="animate-fade-up [animation-delay:480ms]">
+        <QuickDock />
+      </div>
 
-      {/* Maintenance + trips */}
+      {/* Maintenance + recent trips */}
       {maintenance.length > 0 ? (
-        <Link href="/maintenance" className="glass-card flex items-center gap-3 p-4">
+        <Link
+          href="/maintenance"
+          className="glass-card flex items-center gap-3 p-4 animate-fade-up [animation-delay:540ms]"
+        >
           <Wrench size={18} className="shrink-0 text-risk-yellow" />
           <div className="min-w-0 flex-1">
             <span className="instrument-label">{t("home.upcomingMaintenance")}</span>
@@ -158,8 +147,11 @@ export default function DashboardPage() {
       ) : null}
 
       {trips.length > 0 ? (
-        <Link href="/logbook" className="glass-card flex items-center gap-3 p-4">
-          <Fuel size={18} className="shrink-0 text-sonar" />
+        <Link
+          href="/logbook"
+          className="glass-card flex items-center gap-3 p-4 animate-fade-up [animation-delay:600ms]"
+        >
+          <BookOpen size={18} className="shrink-0 text-sonar" />
           <div className="min-w-0 flex-1">
             <span className="instrument-label">{t("home.recentTrips")}</span>
             <p className="truncate text-sm">

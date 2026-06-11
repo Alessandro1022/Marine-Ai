@@ -68,7 +68,9 @@ async function streamGemini(messages: Msg[], system: string) {
   if (!res.ok || !res.body) throw new Error(`gemini_${res.status}`);
 
   return sseToTextStream(res.body, (json) => {
-    const j = json as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+    const j = json as {
+      candidates?: { content?: { parts?: { text?: string }[] } }[];
+    };
     return j?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
   });
 }

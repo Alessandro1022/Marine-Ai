@@ -1,27 +1,21 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createClient } from "@/lib/supabase/client";
 
 interface SettingsState {
   fuelPriceSek: number;
-  consumptionLiterPerHour: number;
-  reservePercent: number;
-  load: () => void;
-  setFuelPrice: (price: number) => void;
-  setConsumption: (liters: number) => void;
-  setReservePercent: (pct: number) => void;
+  loaded: boolean;
+  load: () => Promise<void>;
 }
 
-export const useSettingsStore = create<SettingsState>()(
-  persist(
-    (set) => ({
-      fuelPriceSek: 22,
-      consumptionLiterPerHour: 20,
-      reservePercent: 20,
-      load: () => { /* hydrated by zustand/persist automatically */ },
-      setFuelPrice: (fuelPriceSek) => set({ fuelPriceSek }),
-      setConsumption: (consumptionLiterPerHour) => set({ consumptionLiterPerHour }),
-      setReservePercent: (reservePercent) => set({ reservePercent }),
-    }),
-    { name: "marine-settings" }
-  )
-);
+export const useSettingsStore = create<SettingsState>((set, get) => ({
+  fuelPriceSek: 25,
+  loaded: false,
+
+  load: async () => {
+    if (get().loaded) return;
+    const supabase = createClient();
+    const { data } = await supabase.from("settings").select("*").maybeSingle();
+    if (data) set({ fuelPriceSek: Number(data.fuel_price_sek_per_liter) || 25 });
+    set({ loaded: true });
+  },
+}));

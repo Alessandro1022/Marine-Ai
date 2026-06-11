@@ -2,26 +2,24 @@
 
 import { useEffect, useState } from "react";
 
-interface GeoState {
-  lat: number | null;
-  lon: number | null;
-  error: string | null;
-}
+// Default: Stockholm archipelago
+const FALLBACK = { lat: 59.32, lon: 18.55 };
 
-export function useGeolocation(): GeoState {
-  const [state, setState] = useState<GeoState>({ lat: null, lon: null, error: null });
+export function useGeolocation() {
+  const [position, setPosition] = useState<{ lat: number; lon: number }>(FALLBACK);
+  const [isFallback, setIsFallback] = useState(true);
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setState((s) => ({ ...s, error: "Geolocation not supported" }));
-      return;
-    }
+    if (!("geolocation" in navigator)) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => setState({ lat: pos.coords.latitude, lon: pos.coords.longitude, error: null }),
-      (err) => setState((s) => ({ ...s, error: err.message })),
-      { enableHighAccuracy: false, timeout: 10000 }
+      (pos) => {
+        setPosition({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        setIsFallback(false);
+      },
+      () => setIsFallback(true),
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300_000 }
     );
   }, []);
 
-  return state;
+  return { ...position, isFallback };
 }

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -57,14 +56,15 @@ export default function AIPage() {
 
     let full = "";
     try {
-      full = await streamChat({
+      await streamChat({
         messages: next,
         locale,
         context,
-        onChunk: () => {
+        onChunk: (chunk) => {
+          full += chunk;
           setMessages((m) => {
             const copy = [...m];
-            copy[copy.length - 1] = { role: "assistant", content: (full += "") || copy[copy.length - 1].content };
+            copy[copy.length - 1] = { role: "assistant", content: full };
             return copy;
           });
         },

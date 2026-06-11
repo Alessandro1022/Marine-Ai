@@ -1,70 +1,115 @@
+// Connects to onboard marine electronics (Garmin, Raymarine, Simrad/Navico,
+// Lowrance, B&G and any NMEA 2000/0183 network) through a SignalK gateway on
+// the boat's WiFi (e.g. Yacht Devices YDWG-02, Raspberry Pi SignalK server,
+// or chartplotters with SignalK support).
+//
+// Note: connecting to a local ws:// gateway from an https PWA is blocked by
+// browsers (mixed content). Live telemetry works in the wrapped native app
+// (WKWebView/WebView allows it) or when the gateway exposes wss://.
+
 export interface Telemetry {
   speedOverGroundKn: number | null;
   courseOverGroundDeg: number | null;
   depthM: number | null;
   windSpeedApparentMs: number | null;
-  windAngleApparentDeg: number | null;
-  latitude: number | null;
-  longitude: number | null;
+  headingDeg: number | null;
+  updatedAt: number;
 }
 
-export interface IntegrationProvider {
-  id: string;
-  name: string;
-  note: string;
-}
+type Listener = (t: Telemetry) => void;
 
-export const INTEGRATION_PROVIDERS: IntegrationProvider[] = [
-  { id: "signalk", name: "SignalK", note: "Open marine data standard" },
-  { id: "nmea2000", name: "NMEA 2000", note: "via SignalK gateway" },
-  { id: "nmea0183", name: "NMEA 0183", note: "via SignalK gateway" },
-  { id: "garmin", name: "Garmin", note: "via SignalK plugin" },
-  { id: "raymarine", name: "Raymarine", note: "via SignalK plugin" },
-];
-
-type StatusCallback = (status: "idle" | "connecting" | "open" | "closed" | "error") => void;
-
-const EMPTY: Telemetry = {
-  speedOverGroundKn: null,
-  courseOverGroundDeg: null,
-  depthM: null,
-  windSpeedApparentMs: null,
-  windAngleApparentDeg: null,
-  latitude: null,
-  longitude: null,
-};
+const MS_TO_KN = 1.94384;
+const RAD_TO_DEG = 180 / Math.PI;
 
 export class SignalKClient {
   private ws: WebSocket | null = null;
-  private current: Telemetry = { ...EMPTY };
+  private telemetry: Telemetry = {
+    speedOverGroundKn: null,
+    courseOverGroundDeg: null,
+    depthM: null,
+    windSpeedApparentMs: null,
+    headingDeg: null,
+    updatedAt: 0,
+  };
 
-  connect(host: string, onData: (t: Telemetry) => void, onStatus: StatusCallback) {
+  connect(host: string, onUpdate: Listener, onStatus: (s: "connecting" | "open" | "closed" | "error") => void) {
+    this.disconnect();
+    const secure = typeof window !== "undefined" && window.location.protocol === "https:";
+    const proto = secure ? "wss" : "ws";
+    const url = `${proto}://${host}/signalk/v1/stream?subscribe=none`;
+
     onStatus("connecting");
-    this.current = { ...EMPTY };
-    const url = `ws://${host}/signalk/v1/stream?subscribe=all`;
-    this.ws = new WebSocket(url);
-    this.ws.onopen = () => onStatus("open");
-    this.ws.onclose = () => onStatus("closed");
-    this.ws.onerror = () => onStatus("error");
+    try {
+      this.ws = new WebSocket(url);
+    } catch {
+      onStatus("error");
+      return;
+    }
+
+    this.ws.onopen = () => {
+      onStatus("open");
+      this.ws?.send(
+        JSON.stringify({
+          context: "vessels.self",
+          subscribe: [
+            { path: "navigation.speedOverGround" },
+            { path: "navigation.courseOverGroundTrue" },
+            { path: "navigation.headingTrue" },
+            { path: "environment.depth.belowTransducer" },
+            { path: "environment.wind.speedApparent" },
+          ],
+        })
+      );
+    };
+
     this.ws.onmessage = (event) => {
       try {
-        const msg = JSON.parse(event.data as string);
-        for (const update of msg?.updates ?? []) {
-          for (const value of update.values ?? []) {
-            switch (value.path) {
-              case "navigation.speedOverGround": this.current.speedOverGroundKn = value.value * 1.94384; break;
-              case "navigation.courseOverGroundTrue": this.current.courseOverGroundDeg = (value.value * 180) / Math.PI; break;
-              case "environment.depth.belowKeel": this.current.depthM = value.value; break;
-              case "environment.wind.speedApparent": this.current.windSpeedApparentMs = value.value; break;
-              case "environment.wind.angleApparent": this.current.windAngleApparentDeg = (value.value * 180) / Math.PI; break;
-              case "navigation.position": this.current.latitude = value.value.latitude; this.current.longitude = value.value.longitude; break;
+        const msg = JSON.parse(event.data);
+        const updates = msg.updates ?? [];
+        for (const update of updates) {
+          for (const v of update.values ?? []) {
+            switch (v.path) {
+              case "navigation.speedOverGround":
+                this.telemetry.speedOverGroundKn = v.value * MS_TO_KN;
+                break;
+              case "navigation.courseOverGroundTrue":
+                this.telemetry.courseOverGroundDeg = v.value * RAD_TO_DEG;
+                break;
+              case "navigation.headingTrue":
+                this.telemetry.headingDeg = v.value * RAD_TO_DEG;
+                break;
+              case "environment.depth.belowTransducer":
+                this.telemetry.depthM = v.value;
+                break;
+              case "environment.wind.speedApparent":
+                this.telemetry.windSpeedApparentMs = v.value;
+                break;
             }
           }
         }
-        onData({ ...this.current });
-      } catch { /* ignore */ }
+        this.telemetry.updatedAt = Date.now();
+        onUpdate({ ...this.telemetry });
+      } catch {
+        // ignore malformed frames
+      }
     };
+
+    this.ws.onerror = () => onStatus("error");
+    this.ws.onclose = () => onStatus("closed");
   }
 
-  disconnect() { this.ws?.close(); this.ws = null; }
+  disconnect() {
+    this.ws?.close();
+    this.ws = null;
+  }
 }
+
+export const INTEGRATION_PROVIDERS = [
+  { id: "garmin", name: "Garmin", note: "Via NMEA 2000 gateway / SignalK" },
+  { id: "raymarine", name: "Raymarine", note: "Via SeaTalkNG–N2K gateway / SignalK" },
+  { id: "simrad", name: "Simrad (Navico)", note: "Via NMEA 2000 gateway / SignalK" },
+  { id: "lowrance", name: "Lowrance", note: "Via NMEA 2000 gateway / SignalK" },
+  { id: "bg", name: "B&G", note: "Via NMEA 2000 gateway / SignalK" },
+  { id: "yachtdevices", name: "Yacht Devices", note: "YDWG-02 WiFi gateway (direct)" },
+  { id: "signalk", name: "SignalK Server", note: "Raspberry Pi / onboard server (direct)" },
+] as const;

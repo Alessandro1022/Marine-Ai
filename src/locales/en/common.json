@@ -81,7 +81,23 @@
     "quickActions": "Quick actions",
     "riskGreen": "Good conditions",
     "riskYellow": "Stay alert",
-    "riskRed": "Not advised — stay in harbor"
+    "riskRed": "Not advised — stay in harbor",
+    "greeting": "Welcome aboard",
+    "goodMorning": "Good morning",
+    "goodDay": "Good day",
+    "goodEvening": "Good evening",
+    "goodNight": "Good night",
+    "localTime": "Local time",
+    "approxPosition": "approximate",
+    "nearby": "marinas in range",
+    "forecast": "12-hour forecast",
+    "daylight": "Daylight",
+    "nightfall": "Nightfall in {{minutes}} min — plan your return",
+    "range": "Range",
+    "fuelLeft": "Left in tank",
+    "briefing": "Captain's briefing",
+    "briefingUnavailable": "Briefing unavailable right now.",
+    "regenerate": "Regenerate"
   },
   "ai": {
     "title": "Marine AI assistant",
@@ -148,7 +164,16 @@
     "emergencyChecklist": "Emergency checklist",
     "emergencyContacts": "Emergency contacts",
     "sos": "SOS information",
-    "sosNumber": "Sea rescue: 112 — ask for JRCC"
+    "sosNumber": "Sea rescue: 112 — ask for JRCC",
+    "check1": "Life jackets on everyone aboard",
+    "check2": "Check fuel level and reserve",
+    "check3": "VHF/phone charged and waterproofed",
+    "check4": "Tell someone ashore your route and ETA home",
+    "check5": "Check weather forecast and warnings",
+    "check6": "Bilge pump, anchor and emergency gear checked",
+    "contactJrcc": "Joint Rescue Coordination Centre (JRCC)",
+    "contactSsrs": "Swedish Sea Rescue Society (SSRS)",
+    "contactVhf": "Distress call VHF"
   },
   "profile": {
     "title": "Profile",
@@ -176,7 +201,8 @@
     "eta": "Estimated arrival",
     "fuelEstimate": "Fuel estimate",
     "weatherRisk": "Weather risk",
-    "generateReport": "Generate route report"
+    "generateReport": "Generate route report",
+    "aiAnalysis": "AI route analysis"
   },
   "fuel": {
     "title": "Fuel calculator",
@@ -184,5 +210,20 @@
     "costEstimate": "Cost estimate",
     "safetyReserve": "Safety reserve",
     "calculate": "Calculate"
+  },
+  "integrations": {
+    "title": "Marine electronics",
+    "subtitle": "Connect Garmin, Raymarine and more via NMEA 2000 / SignalK",
+    "gateway": "Gateway connection",
+    "note": "Connect to your NMEA 2000/SignalK gateway on the boat's WiFi (e.g. Yacht Devices YDWG-02 or a SignalK server). Local connection requires the app version or a gateway with wss:// support.",
+    "liveTelemetry": "Live telemetry",
+    "depth": "Depth",
+    "windApparent": "Apparent wind",
+    "supported": "Supported ecosystems",
+    "status_idle": "Not connected",
+    "status_connecting": "Connecting…",
+    "status_open": "Connected",
+    "status_closed": "Disconnected",
+    "status_error": "Error"
   }
 }

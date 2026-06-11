@@ -1,47 +1,36 @@
-export interface ChatMsg {
-  role: "user" | "assistant";
-  content: string;
-}
+export type ChatMsg = { role: "user" | "assistant"; content: string };
 
-interface StreamChatOptions {
+export async function streamChat(params: {
   messages: ChatMsg[];
-  locale?: string;
+  locale: string;
   context?: string;
-  onChunk?: (chunk: string) => void;
-}
-
-const SYSTEM_PROMPT = (locale: string, context?: string) => `
-You are Empire Marine AI, an expert maritime assistant. 
-Answer in ${locale === "sv" ? "Swedish" : "English"}.
-Be concise, practical, and safety-focused.
-${context ? `\nContext: ${context}` : ""}
-`.trim();
-
-export async function streamChat({
-  messages,
-  locale = "en",
-  context,
-  onChunk,
-}: StreamChatOptions): Promise<string> {
+  onChunk: (text: string) => void;
+  signal?: AbortSignal;
+}): Promise<string> {
   const res = await fetch("/api/ai/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, locale, context }),
+    body: JSON.stringify({
+      messages: params.messages,
+      locale: params.locale,
+      context: params.context,
+    }),
+    signal: params.signal,
   });
 
-  if (!res.ok || !res.body) throw new Error("AI request failed");
+  if (!res.ok || !res.body) {
+    throw new Error("ai_request_failed");
+  }
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let full = "";
-
-  while (true) {
+  for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
-    const chunk = decoder.decode(value, { stream: true });
-    full += chunk;
-    onChunk?.(chunk);
+    const text = decoder.decode(value, { stream: true });
+    full += text;
+    params.onChunk(text);
   }
-
   return full;
 }
