@@ -252,6 +252,11 @@
     "routeCrosses": "route crosses the area",
     "routeNear": "passes {{meters}} m from the area",
     "activeNow": "active now",
-    "disclaimer": "Not for navigation — verify against official charts"
+    "disclaimer": "Not for navigation — verify against official charts",
+    "baseLayer": "Base chart",
+    "baseChart": "Sea chart (land + depth)",
+    "baseEniro": "Eniro nautical (beta)",
+    "baseDark": "Dark mode",
+    "layerDepth": "Depth shading"
   }
 }
