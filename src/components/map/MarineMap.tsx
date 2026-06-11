@@ -27,11 +27,17 @@ import { MapAIPanel } from "./MapAIPanel";
 import { MapControls } from "./MapControls";
 import type { Marina } from "@/types";
 
-// Free nautical chart sources:
-//  - Base: EMODnet bathymetry (official EU service, depth shading + contours)
-//  - Overlay: OpenSeaMap seamarks (buoys, lights, fairways)
+// Chart layer stack (all free):
+//  - "chart": light land base at every zoom + EMODnet depth shading overlay
+//  - "eniro": Eniro nautical raster (Sjöfartsverket-based, real chart look).
+//             Third-party service — availability not guaranteed.
+//  - "dark": dark base for night mode
+const LAND_BASE_URL =
+  "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png";
 const EMODNET_URL =
   "https://tiles.emodnet-bathymetry.eu/2020/baselayer/web_mercator/{z}/{x}/{y}.png";
+const ENIRO_URL =
+  "https://map.eniro.com/geowebcache/service/tms1.0.0/nautical/{z}/{x}/{y}.png";
 const SEAMARK_URL = "https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png";
 const DARK_URL =
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
@@ -168,13 +174,29 @@ export default function MarineMap() {
         attributionControl={false}
         ref={mapRef}
       >
-        {store.darkBase ? (
-          <TileLayer url={DARK_URL} />
+        {store.base === "dark" ? (
+          <TileLayer url={DARK_URL} maxZoom={18} />
+        ) : store.base === "eniro" ? (
+          <>
+            {/* Fallback under Eniro so missing tiles never leave holes */}
+            <TileLayer url={LAND_BASE_URL} maxZoom={18} />
+            <TileLayer url={ENIRO_URL} tms maxZoom={17} opacity={1} />
+          </>
         ) : (
-          <TileLayer url={EMODNET_URL} maxNativeZoom={12} maxZoom={16} />
+          <>
+            <TileLayer url={LAND_BASE_URL} maxZoom={18} />
+            {store.showDepth ? (
+              <TileLayer
+                url={EMODNET_URL}
+                maxNativeZoom={12}
+                maxZoom={18}
+                opacity={0.72}
+              />
+            ) : null}
+          </>
         )}
         {store.showSeamarks ? (
-          <TileLayer url={SEAMARK_URL} maxZoom={18} />
+          <TileLayer url={SEAMARK_URL} maxZoom={18} minZoom={9} />
         ) : null}
 
         {store.showMarinas
