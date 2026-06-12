@@ -1,31 +1,22 @@
-"use client";
+import AppShell from "@/components/AppShell";
+import { requireUser } from "@/lib/supabase/guard";
+import { createClient } from "@/lib/supabase/server";
 
-import { useEffect } from "react";
-import { BottomTabBar } from "@/components/nav/BottomTabBar";
-import { useAuthStore } from "@/stores/authStore";
-import { useBoatStore } from "@/stores/boatStore";
-import { useSettingsStore } from "@/stores/settingsStore";
+export const dynamic = "force-dynamic";
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const initAuth = useAuthStore((s) => s.init);
-  const loadBoats = useBoatStore((s) => s.load);
-  const loadSettings = useSettingsStore((s) => s.load);
+export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
+  const { profile } = await requireUser();
+  const supabase = createClient();
 
-  useEffect(() => {
-    void initAuth();
-    void loadBoats();
-    void loadSettings();
-  }, [initAuth, loadBoats, loadSettings]);
+  const { count } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", profile.id)
+    .eq("read", false);
 
   return (
-    <div className="min-h-dvh">
-      {/* Background grid lives in its own fixed layer so it can never
-          affect positioning of other fixed elements (the tab bar). */}
-      <div className="holo-grid pointer-events-none fixed inset-0 -z-10" aria-hidden />
-      <main className="mx-auto max-w-md px-5 pb-28 pt-[calc(env(safe-area-inset-top,0px)+1.25rem)]">
-        {children}
-      </main>
-      <BottomTabBar />
-    </div>
+    <AppShell role={profile.role} userName={profile.full_name} unread={count ?? 0}>
+      {children}
+    </AppShell>
   );
 }

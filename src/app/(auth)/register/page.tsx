@@ -5,77 +5,79 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/lib/i18n";
+import { Button, Card, Field, Input } from "@/components/ui";
+import { LanguageToggle, ThemeToggle } from "@/components/AppShell";
 
 export default function RegisterPage() {
   const { t } = useI18n();
   const router = useRouter();
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirm: "",
-  });
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [companyName, setCompanyName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  async function handleRegister() {
-    if (form.password !== form.confirm) {
-      setError(t("auth.passwordMismatch"));
-      return;
-    }
-    setLoading(true);
-    setError(null);
+  async function onSubmit() {
+    setBusy(true); setError("");
     const supabase = createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: { first_name: form.firstName, last_name: form.lastName },
-        emailRedirectTo: `${window.location.origin}/login`,
-      },
+
+    const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+    if (signUpError || !data.user) {
+      setError(signUpError?.message || "Sign up failed"); setBusy(false); return;
+    }
+    // If email confirmation is on, session may be missing — sign in directly.
+    if (!data.session) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) { setError(signInError.message); setBusy(false); return; }
+    }
+
+    const { error: rpcError } = await supabase.rpc("register_company", {
+      company_name: companyName.trim(),
+      owner_name: fullName.trim(),
+      owner_email: email.trim(),
     });
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
-    if (data.session) {
-      router.push("/onboarding");
-    } else {
-      router.push(`/verify-email?email=${encodeURIComponent(form.email)}`);
-    }
+    if (rpcError) { setError(rpcError.message); setBusy(false); return; }
+
+    router.push("/dashboard");
+    router.refresh();
   }
 
-  const valid =
-    form.firstName && form.email && form.password.length >= 6 && form.confirm;
+  const valid = companyName && fullName && email && password.length >= 6;
 
   return (
-    <div>
-      <h1 className="font-display text-3xl font-semibold glow-text">
-        {t("auth.register")}
-      </h1>
-      <div className="mt-8 flex flex-col gap-3">
-        <div className="grid grid-cols-2 gap-3">
-          <input className="input-field" placeholder={t("auth.firstName")} value={form.firstName} onChange={set("firstName")} />
-          <input className="input-field" placeholder={t("auth.lastName")} value={form.lastName} onChange={set("lastName")} />
+    <div className="bp-bg min-h-dvh flex flex-col">
+      <div className="flex justify-end gap-2 p-4"><LanguageToggle /><ThemeToggle /></div>
+      <div className="flex flex-1 items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 text-center">
+            <span className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-gold-500 font-display text-2xl font-bold text-ink-950">A</span>
+            <h1 className="font-display text-2xl font-semibold text-ink-900 dark:text-white">{t("register_title")}</h1>
+            <p className="mt-1 text-sm text-ink-600 dark:text-white/40">{t("register_owner_note")}</p>
+          </div>
+          <Card className="p-6 space-y-4">
+            <Field label={t("company_name")}>
+              <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+            </Field>
+            <Field label={t("full_name")}>
+              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" />
+            </Field>
+            <Field label={t("email")}>
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+            </Field>
+            <Field label={t("password")}>
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+            </Field>
+            {error && <p className="text-sm text-signal-red">{error}</p>}
+            <Button size="lg" className="w-full" onClick={onSubmit} disabled={busy || !valid}>
+              {busy ? t("loading") : t("register_cta")}
+            </Button>
+            <p className="text-center text-sm text-ink-600 dark:text-white/40">
+              {t("have_account")}{" "}
+              <Link href="/login" className="text-gold-600 dark:text-gold-400 hover:underline">{t("login_cta")}</Link>
+            </p>
+          </Card>
         </div>
-        <input className="input-field" type="email" autoComplete="email" placeholder={t("auth.email")} value={form.email} onChange={set("email")} />
-        <input className="input-field" type="password" autoComplete="new-password" placeholder={t("auth.password")} value={form.password} onChange={set("password")} />
-        <input className="input-field" type="password" autoComplete="new-password" placeholder={t("auth.confirmPassword")} value={form.confirm} onChange={set("confirm")} />
-        {error ? <p className="text-sm text-risk-red">{error}</p> : null}
-        <button className="btn-primary mt-2" onClick={handleRegister} disabled={loading || !valid}>
-          {loading ? t("common.loading") : t("auth.register")}
-        </button>
-        <p className="mt-4 text-center text-sm text-mist">
-          {t("auth.hasAccount")}{" "}
-          <Link href="/login" className="text-sonar">
-            {t("auth.login")}
-          </Link>
-        </p>
       </div>
     </div>
   );

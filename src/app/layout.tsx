@@ -1,56 +1,47 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono, Saira } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/components/providers/Providers";
-import { RegisterSW } from "@/components/pwa/RegisterSW";
-
-const saira = Saira({
-  subsets: ["latin"],
-  variable: "--font-saira",
-  weight: ["400", "500", "600", "700"],
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
-
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains",
-  weight: ["400", "500", "600"],
-});
+import { I18nProvider } from "@/lib/i18n";
+import { ThemeProvider } from "@/lib/theme";
+import PwaRegister from "@/components/PwaRegister";
 
 export const metadata: Metadata = {
-  title: "Empire Marine AI",
-  description:
-    "Your intelligent marine assistant — weather, routes, fuel, maintenance and AI guidance for boaters.",
+  title: "Aetos Build AI",
+  description: "Bygg smartare. Läck mindre. | Build smarter. Leak less.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Empire Marine AI",
+    title: "Aetos Build",
   },
+  icons: { icon: "/icons/icon-192.png", apple: "/icons/icon-192.png" },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#060D14",
+  themeColor: "#0A0D12",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   viewportFit: "cover",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="sv" suppressHydrationWarning>
-      <body
-        className={`${saira.variable} ${inter.variable} ${jetbrains.variable}`}
-      >
-        <Providers>{children}</Providers>
-        <RegisterSW />
+    <html lang="sv" className="dark" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="font-body antialiased">
+        <ThemeProvider>
+          <I18nProvider>
+            {children}
+            <PwaRegister />
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
