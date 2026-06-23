@@ -5,7 +5,6 @@ Your intelligent marine assistant — weather, routes, fuel, maintenance and AI 
 © Aetos Systems
 
 ## Stack
-
 - Next.js 15 (App Router) + TypeScript
 - Tailwind CSS v3 (do NOT upgrade to v4)
 - React 18 (do NOT upgrade to 19)
