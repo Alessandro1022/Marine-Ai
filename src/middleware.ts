@@ -41,16 +41,19 @@ export async function middleware(request: NextRequest) {
       },
     });
 
+    // Read the session from the cookie locally — no network round-trip to
+    // Supabase. getUser() hits the Auth server on every request and can hang
+    // the Edge middleware, causing MIDDLEWARE_INVOCATION_TIMEOUT (504).
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
 
     const { pathname } = request.nextUrl;
     const isPublic = PUBLIC_PATHS.some(
       (p) => pathname === p || (p !== "/" && pathname.startsWith(p))
     );
 
-    if (!user && !isPublic) {
+    if (!session && !isPublic) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       return NextResponse.redirect(url);
