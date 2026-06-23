@@ -34,8 +34,7 @@ Your intelligent marine assistant — weather, routes, fuel, maintenance and AI 
 - Tailwind stays on v3.x. v4 breaks the layout system.
 - React stays on 18.x to avoid dependency conflicts.
 
-## Structure
-
+## Structur
 ```
 src/
   app/            Screens (App Router)
