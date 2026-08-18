@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useRef } from "react";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
@@ -15,7 +16,7 @@ export function DepthTooltip() {
     const handleMouseDown = (e: L.LeafletMouseEvent) => {
       isPressed = true;
       pressTimer = setTimeout(() => {
-        if (isPressed) fetchDepth(e.latlng.lat, e.latlng.lng, map);
+        if (isPressed) fetchDepth(e.latlng.lat, e.latlng.lng, map, tooltipRef);
       }, 800);
     };
 
@@ -38,7 +39,12 @@ export function DepthTooltip() {
   return null;
 }
 
-async function fetchDepth(lat: number, lng: number, map: L.Map) {
+async function fetchDepth(
+  lat: number,
+  lng: number,
+  map: L.Map,
+  tooltipRef: React.MutableRefObject<L.Popup | null>
+) {
   try {
     const url = new URL("https://ows.emodnet-bathymetry.eu/wms");
     url.searchParams.append("service", "WMS");
@@ -58,12 +64,12 @@ async function fetchDepth(lat: number, lng: number, map: L.Map) {
     if (!res.ok) throw new Error();
     const data = await res.json();
     const features = data.features || [];
-    
+
     if (features.length > 0) {
       const depth = Math.abs(features[0].properties?.MEAN_STD_SPRING ?? 0);
-      
+
       if (tooltipRef.current) map.removeLayer(tooltipRef.current);
-      
+
       const popup = L.popup({
         className: "depth-tooltip",
         autoClose: false,
@@ -86,5 +92,3 @@ async function fetchDepth(lat: number, lng: number, map: L.Map) {
     console.error("[Depth]", err);
   }
 }
-
-let tooltipRef: L.Popup | null = null;
