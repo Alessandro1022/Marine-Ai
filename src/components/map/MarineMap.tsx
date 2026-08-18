@@ -10,6 +10,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useWeather } from "@/hooks/useWeather";
 import { useI18n } from "@/lib/i18n";
+import { DepthTooltip } from "@/components/map/DepthTooltip";
+import { useTilePreload } from "@/hooks/useTilePreload";
 import { useMapStore } from "@/stores/mapStore";
 import {
   buildChartContext,
@@ -170,6 +172,14 @@ export default function MarineMap() {
       store.routeStart && store.routeEnd
         ? `${store.routeStart.lat.toFixed(3)},${store.routeStart.lng.toFixed(3)} → ${store.routeEnd.lat.toFixed(3)},${store.routeEnd.lng.toFixed(3)}, ${haversineNm(store.routeStart.lat, store.routeStart.lng, store.routeEnd.lat, store.routeEnd.lng).toFixed(1)} nm${routeStats ? `, ETA ${formatEta(routeStats.eta_minutes)}, fuel ~${routeStats.fuel_liters} L` : ""}`
         : undefined;
+
+   return (
+    <MapContainer ...>
+      <DepthTooltip />
+      {/* existing layers */}
+    </MapContainer>
+  );
+}
 
     return buildChartContext({
       centerLat: map?.getCenter().lat ?? lat,
