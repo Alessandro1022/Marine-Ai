@@ -13,7 +13,8 @@ export interface AIContext {
 export async function buildAIContext(
   lat: number,
   lon: number,
-  weather: WeatherSnapshot | null | undefined,  ✅ Accepterar `undefined`
+  weather: WeatherSnapshot | null | undefined,  
+  Accepterar `undefined`
   boat: Boat | null | undefined
 )
 
