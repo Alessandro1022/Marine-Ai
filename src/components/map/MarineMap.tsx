@@ -65,6 +65,11 @@ function FlyTo({ trigger, lat, lon }: { trigger: number; lat: number; lon: numbe
   return null;
 }
 
+function TilePreloader() {
+  useTilePreload();
+  return null;
+}
+
 export default function MarineMap() {
   const { t, locale } = useI18n();
   const geo = useGeolocation();
@@ -78,9 +83,6 @@ export default function MarineMap() {
   const mapRef = useRef<L.Map | null>(null);
 
   const onFix = useCallback((f: LiveFix) => setFix(f), []);
-
-  // Call preload hook early
-  useTilePreload();
 
   const { data: marinas } = useQuery({
     queryKey: ["marinas"],
@@ -106,7 +108,6 @@ export default function MarineMap() {
   const lon = fix?.lon ?? geo.lon;
   const { data: weather } = useWeather(lat, lon);
 
-  // Route eco check
   const hits = useMemo(() => {
     if (!store.routeStart || !store.routeEnd || !areas) return [];
     return checkRouteAgainstAreas(
@@ -118,7 +119,6 @@ export default function MarineMap() {
     );
   }, [store.routeStart, store.routeEnd, areas]);
 
-  // Route stats chip
   const routeStats = useMemo(() => {
     if (!store.routeStart || !store.routeEnd || !weather) return null;
     return estimateRoute({
@@ -132,7 +132,6 @@ export default function MarineMap() {
     });
   }, [store.routeStart, store.routeEnd, weather, boat, fuelPrice]);
 
-  // AI chart context
   const chartContext = useMemo(() => {
     const map = mapRef.current;
     const bounds = map?.getBounds();
@@ -187,7 +186,7 @@ export default function MarineMap() {
         fadeAnimation
         ref={mapRef}
       >
-        {/* DEPTH TOOLTIP — ADD THIS */}
+        <TilePreloader />
         <DepthTooltip />
 
         {store.base === "dark" ? (
@@ -350,3 +349,4 @@ export default function MarineMap() {
     </div>
   );
 }
+
