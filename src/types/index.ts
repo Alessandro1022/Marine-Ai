@@ -18,48 +18,50 @@ export interface Profile {
   created_at: string;
 }
 
-export interface Trip {
+export interface Boat {
   id: string;
   user_id: string;
-  boat_id: string;
-  trip_date: string;
-  start_time: string;           // NYT
-  end_time: string;             // NYT
-  start_location: string;
-  destination: string;
-  start_lat: number;            // NYT
-  start_lon: number;            // NYT
-  end_lat: number;              // NYT
-  end_lon: number;              // NYT
-  distance_nm: number;
-  duration_minutes: number;
-  avg_speed_knots: number;      // NYT
-  fuel_used_liters: number;
-  fuel_cost_sek: number;        // NYT
-  weather_summary: string | null;
+  name: string;
+  boat_type: BoatType;
+  manufacturer: string | null;
+  model: string | null;
+  year: number | null;
+  engine_type: string | null;
+  fuel_capacity_liters: number | null;
+  cruise_speed_knots: number | null;
+  fuel_level_percent: number;
   notes: string | null;
-  track_geojson: {              // NYT
-    type: "LineString";
-    coordinates: [number, number][];
-  } | null;
-  photo_urls?: string[];        // NYT
+  is_primary: boolean;
   created_at: string;
-  updated_at: string;           // NYT
 }
 
 export interface Trip {
   id: string;
   user_id: string;
-  boat_id: string | null;
+  boat_id: string;
   trip_date: string;
+  start_time: string;
+  end_time: string;
   start_location: string;
   destination: string;
-  distance_nm: number | null;
-  duration_minutes: number | null;
-  fuel_used_liters: number | null;
-  weather_summary: string | null;
+  start_lat: number;
+  start_lon: number;
+  end_lat: number;
+  end_lon: number;
+  distance_nm: number;
+  duration_minutes: number;
+  avg_speed_knots: number;
+  fuel_used_liters: number;
+  fuel_cost_sek: number;
   notes: string | null;
+  weather_summary: string | null;
+  track_geojson: {
+    type: "LineString";
+    coordinates: [number, number][];
+  } | null;
+  photo_urls?: string[];
   created_at: string;
+  updated_at: string;
 }
 
 export type MaintenanceType =
@@ -155,4 +157,16 @@ export interface FuelEstimate {
   cost_sek: number;
   reserve_liters: number;
   total_recommended_liters: number;
+}
+
+export interface ProtectedArea {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  radius_nm: number;
+  restrictions: string[];
+  season_start: string | null;
+  season_end: string | null;
+  active: boolean;
 }
