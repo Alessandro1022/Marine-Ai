@@ -13,10 +13,10 @@ export interface AIContext {
 export async function buildAIContext(
   lat: number,
   lon: number,
-  weather: WeatherSnapshot | null | undefined,  
-  Accepterar `undefined`
+  weather: WeatherSnapshot | null | undefined,
   boat: Boat | null | undefined
-)
+): Promise<AIContext> {
+  const supabase = createClient();
 
   const { data: marinas } = await supabase
     .from("marinas")
