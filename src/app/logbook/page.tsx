@@ -5,6 +5,7 @@ import { Play, Square, MapPin, Zap, Clock, Droplet } from "lucide-react";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useBoatStore } from "@/stores/boatStore";
 import { useSettingsStore } from "@/stores/settingsStore";
+import { useWeather } from "@/hooks/useWeather";
 import { createClient } from "@/lib/supabase/client";
 import { haversineNm } from "@/lib/services/routeEngine";
 import { litersPerNm } from "@/lib/services/fuelCalculator";
@@ -21,6 +22,7 @@ export default function LogbookPage() {
   const { lat, lon } = useGeolocation();
   const boat = useBoatStore((s) => s.primaryBoat());
   const fuelPrice = useSettingsStore((s) => s.fuelPriceSek);
+  const { data: weather } = useWeather(lat, lon);
 
   const [trips, setTrips] = useState<Trip[]>([]);
   const [liveTrip, setLiveTrip] = useState<LiveTrip | null>(null);
@@ -99,6 +101,7 @@ export default function LogbookPage() {
       fuel_used_liters: fuel,
       fuel_cost_sek: cost,
       notes: "",
+      weather_summary: weather ? `${weather.wind_speed_ms}m/s, ${weather.temperature_c}°C` : null,
       track_geojson: {
         type: "LineString",
         coordinates: liveTrip.positions.map((p) => [p.lng, p.lat]),
