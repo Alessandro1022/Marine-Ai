@@ -18,21 +18,33 @@ export interface Profile {
   created_at: string;
 }
 
-export interface Boat {
+export interface Trip {
   id: string;
   user_id: string;
-  name: string;
-  boat_type: BoatType;
-  manufacturer: string | null;
-  model: string | null;
-  year: number | null;
-  engine_type: string | null;
-  fuel_capacity_liters: number | null;
-  cruise_speed_knots: number | null;
-  fuel_level_percent: number;
+  boat_id: string;
+  trip_date: string;
+  start_time: string;           // NYT
+  end_time: string;             // NYT
+  start_location: string;
+  destination: string;
+  start_lat: number;            // NYT
+  start_lon: number;            // NYT
+  end_lat: number;              // NYT
+  end_lon: number;              // NYT
+  distance_nm: number;
+  duration_minutes: number;
+  avg_speed_knots: number;      // NYT
+  fuel_used_liters: number;
+  fuel_cost_sek: number;        // NYT
+  weather_summary: string | null;
   notes: string | null;
-  is_primary: boolean;
+  track_geojson: {              // NYT
+    type: "LineString";
+    coordinates: [number, number][];
+  } | null;
+  photo_urls?: string[];        // NYT
   created_at: string;
+  updated_at: string;           // NYT
 }
 
 export interface Trip {
