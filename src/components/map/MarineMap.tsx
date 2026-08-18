@@ -29,31 +29,6 @@ import { MapAIPanel } from "./MapAIPanel";
 import { MapControls } from "./MapControls";
 import type { Marina } from "@/types";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// "Chart Pro" layer stack — best-in-class FREE + LEGAL sources, combined:
-//
-//   1. LAND      CARTO Voyager (OpenStreetMap data) → the most accurate island/
-//                skerry geometry available for the Swedish archipelago.
-//                Tinted chart-beige via the .land-base CSS class.
-//   2. DEPTH     EMODnet Bathymetry raster → official European depth model
-//                (Sjöfartsverket is a contributing partner). Navionics-style
-//                depth band shading, blended into the water.
-//   3. CONTOURS  EMODnet WMS isobaths → server-rendered vector lines, razor
-//                sharp at EVERY zoom level (this is what keeps the chart
-//                readable past the raster's native zoom 12).
-//   4. LABELS    CARTO label tiles → island/place names rendered like on a
-//                real chart (Nötö, Krossholmen, ...). Sits above depth,
-//                below seamarks.
-//   5. SEAMARKS  OpenSeaMap → international buoyage, lights, sectors,
-//                fairways. The only free worldwide seamark renderer.
-//
-// Smoothness rules applied to EVERY tile layer:
-//   - keepBuffer={6}              keep tiles around the viewport cached
-//   - updateWhenZooming={false}   never reload mid-pinch (kills the jank)
-//   - updateWhenIdle={false}      start loading immediately on pan
-//   - maxNativeZoom set per layer so tiles UPSCALE instead of vanishing
-//     when you zoom past their native resolution (no more "holes")
-// ─────────────────────────────────────────────────────────────────────────────
 const LAND_BASE_URL =
   "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png";
 const LABELS_URL =
@@ -63,13 +38,10 @@ const EMODNET_URL =
 const ENIRO_URL =
   "https://map.eniro.com/geowebcache/service/tms1.0.0/nautical/{z}/{x}/{y}.png";
 const SEAMARK_URL = "https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png";
-// EMODnet WMS renders depth contour lines (isobaths) at ANY zoom level —
-// this is what makes the chart readable close-in where raster tiles stop.
 const CONTOURS_WMS = "https://ows.emodnet-bathymetry.eu/wms";
 const DARK_URL =
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
-// Shared smooth-zoom options for all raster layers
 const SMOOTH = {
   keepBuffer: 6,
   updateWhenZooming: false,
@@ -106,6 +78,9 @@ export default function MarineMap() {
   const mapRef = useRef<L.Map | null>(null);
 
   const onFix = useCallback((f: LiveFix) => setFix(f), []);
+
+  // Call preload hook early
+  useTilePreload();
 
   const { data: marinas } = useQuery({
     queryKey: ["marinas"],
@@ -173,14 +148,6 @@ export default function MarineMap() {
         ? `${store.routeStart.lat.toFixed(3)},${store.routeStart.lng.toFixed(3)} → ${store.routeEnd.lat.toFixed(3)},${store.routeEnd.lng.toFixed(3)}, ${haversineNm(store.routeStart.lat, store.routeStart.lng, store.routeEnd.lat, store.routeEnd.lng).toFixed(1)} nm${routeStats ? `, ETA ${formatEta(routeStats.eta_minutes)}, fuel ~${routeStats.fuel_liters} L` : ""}`
         : undefined;
 
-   return (
-    <MapContainer ...>
-      <DepthTooltip />
-      {/* existing layers */}
-    </MapContainer>
-  );
-}
-
     return buildChartContext({
       centerLat: map?.getCenter().lat ?? lat,
       centerLon: map?.getCenter().lng ?? lon,
@@ -193,7 +160,6 @@ export default function MarineMap() {
       routeSummary,
       hits,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiOpen, marinas, areas, weather, hits, routeStats, lat, lon, store.routeStart, store.routeEnd]);
 
   function locate() {
@@ -221,11 +187,13 @@ export default function MarineMap() {
         fadeAnimation
         ref={mapRef}
       >
+        {/* DEPTH TOOLTIP — ADD THIS */}
+        <DepthTooltip />
+
         {store.base === "dark" ? (
           <TileLayer url={DARK_URL} maxZoom={18} maxNativeZoom={18} zIndex={1} {...SMOOTH} />
         ) : store.base === "eniro" ? (
           <>
-            {/* Fallback under Eniro so missing tiles never leave holes */}
             <TileLayer
               url={LAND_BASE_URL}
               maxZoom={18}
@@ -246,7 +214,6 @@ export default function MarineMap() {
           </>
         ) : (
           <>
-            {/* 1. Exact island geometry (OSM data) tinted chart-beige */}
             <TileLayer
               url={LAND_BASE_URL}
               maxZoom={18}
@@ -258,8 +225,6 @@ export default function MarineMap() {
             />
             {store.showDepth ? (
               <>
-                {/* 2. Official EMODnet depth shading: lighter = shallow,
-                    darker blue = deep. Upscales past z12 instead of vanishing. */}
                 <TileLayer
                   url={EMODNET_URL}
                   maxNativeZoom={12}
@@ -268,7 +233,6 @@ export default function MarineMap() {
                   className="depth-layer"
                   {...SMOOTH}
                 />
-                {/* 3. Vector-rendered isobath lines — sharp at every zoom */}
                 <WMSTileLayer
                   url={CONTOURS_WMS}
                   layers="emodnet:contours"
@@ -281,7 +245,6 @@ export default function MarineMap() {
                 />
               </>
             ) : null}
-            {/* 4. Place names like on the official chart (islands, sounds, towns) */}
             <TileLayer
               url={LABELS_URL}
               maxZoom={18}
@@ -291,7 +254,6 @@ export default function MarineMap() {
             />
           </>
         )}
-        {/* 5. International seamarks: buoys, lights, sectors, fairways */}
         {store.showSeamarks ? (
           <TileLayer
             url={SEAMARK_URL}
@@ -326,7 +288,6 @@ export default function MarineMap() {
 
       <MapControls onLocate={locate} onSetAnchorHere={setAnchorHere} />
 
-      {/* Depth legend */}
       {store.base === "chart" && store.showDepth ? (
         <div className="absolute left-3 top-3 z-[999] flex items-center gap-2 rounded-xl border border-white/12 bg-deep/85 px-2.5 py-1.5 backdrop-blur">
           <span
@@ -340,7 +301,6 @@ export default function MarineMap() {
         </div>
       ) : null}
 
-      {/* SOG/COG instrument chip */}
       <div className="absolute bottom-3 left-3 z-[999] rounded-xl border border-white/12 bg-deep/85 px-3 py-2 backdrop-blur">
         <div className="flex gap-4">
           <div>
@@ -368,7 +328,6 @@ export default function MarineMap() {
         </div>
       </div>
 
-      {/* AI button */}
       <button
         onClick={() => setAiOpen(true)}
         className="btn-primary absolute bottom-3 right-3 z-[999] !px-4 !py-2.5 text-xs"
@@ -385,7 +344,6 @@ export default function MarineMap() {
         />
       ) : null}
 
-      {/* Disclaimer + credits */}
       <p className="absolute bottom-0 left-1/2 z-[998] -translate-x-1/2 whitespace-nowrap pb-0.5 text-[0.55rem] text-mist/60">
         {t("chart.disclaimer")} · © EMODnet · OpenSeaMap · CARTO/OSM
       </p>
