@@ -34,7 +34,6 @@ export default function AIPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
-  // Load chats from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("marivo_ai_chats");
     if (saved) {
@@ -50,19 +49,16 @@ export default function AIPage() {
     }
   }, []);
 
-  // Save chats to localStorage
   useEffect(() => {
     if (chats.length > 0) {
       localStorage.setItem("marivo_ai_chats", JSON.stringify(chats));
     }
   }, [chats]);
 
-  // Auto-scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chats, currentChatId]);
 
-  // Init Web Speech API
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -127,10 +123,7 @@ export default function AIPage() {
           ? {
               ...c,
               messages: [...c.messages, userMessage],
-              title:
-                c.messages.length === 0
-                  ? text.substring(0, 25) + "..."
-                  : c.title,
+              title: c.messages.length === 0 ? text.substring(0, 25) + "..." : c.title,
             }
           : c
       )
@@ -157,9 +150,7 @@ export default function AIPage() {
 
       setChats((prev) =>
         prev.map((c) =>
-          c.id === currentChatId
-            ? { ...c, messages: [...c.messages, assistantMessage] }
-            : c
+          c.id === currentChatId ? { ...c, messages: [...c.messages, assistantMessage] } : c
         )
       );
     } catch (error) {
@@ -180,18 +171,18 @@ export default function AIPage() {
   }
 
   return (
-    <div className="h-screen bg-deep flex flex-col pb-20">
+    <div className="h-screen bg-deep flex flex-col pb-20 overflow-hidden">
       {/* SIDEBAR */}
       <div
-        className={`fixed inset-y-0 left-0 z-40 w-72 bg-deep/95 backdrop-blur-xl border-r border-sonar/10 transition-transform ${
+        className={`fixed inset-y-0 left-0 z-40 w-72 bg-deep border-r border-sonar/20 transition-transform ${
           showSidebar ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="h-full flex flex-col">
-          <div className="p-4 border-b border-sonar/10">
+          <div className="p-4 border-b border-sonar/20">
             <button
               onClick={newChat}
-              className="w-full px-4 py-3 rounded-xl bg-sonar/25 hover:bg-sonar/35 text-sonar font-medium flex items-center justify-center gap-2 transition"
+              className="w-full px-4 py-3 rounded-2xl bg-sonar/30 hover:bg-sonar/40 text-sonar font-medium flex items-center justify-center gap-2 transition"
             >
               <Plus size={18} /> Ny chatt
             </button>
@@ -230,7 +221,7 @@ export default function AIPage() {
       </div>
 
       {/* HEADER - FIXED */}
-      <div className="fixed top-0 inset-x-0 z-20 bg-deep border-b border-sonar/10 p-4">
+      <div className="fixed top-0 inset-x-0 z-20 bg-deep border-b border-sonar/20 px-4 py-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowSidebar(!showSidebar)}
@@ -251,14 +242,14 @@ export default function AIPage() {
           <div className="h-full flex flex-col items-center justify-center text-center">
             <div className="text-5xl mb-6 text-sonar/20">⚓</div>
             <h2 className="text-lg font-semibold text-mist mb-2">Välkommen till MARIVIO AI</h2>
-            <p className="text-xs text-mist/60 mb-8">Din personliga sjöfarts-assistent</p>
+            <p className="text-xs text-mist/60 mb-12">Din personliga sjöfarts-assistent</p>
 
-            <div className="w-full max-w-xs space-y-3">
+            <div className="w-full max-w-sm space-y-3 px-4">
               {QUICK_QUESTIONS.map((q, i) => (
                 <button
                   key={i}
                   onClick={() => sendMessage(q)}
-                  className="w-full px-4 py-3 rounded-2xl border border-sonar/20 hover:bg-sonar/10 text-sm text-mist/80 transition active:scale-95"
+                  className="w-full px-4 py-3 rounded-2xl border border-sonar/30 hover:bg-sonar/10 text-sm text-mist/80 transition active:scale-95"
                 >
                   {q}
                 </button>
@@ -268,10 +259,10 @@ export default function AIPage() {
         ) : (
           <>
             {currentChat.messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} px-0`}>
                 <div
                   className={`max-w-xs px-4 py-3 rounded-2xl text-sm ${
-                    msg.role === "user" ? "bg-sonar/25 text-sonar" : "bg-white/10 text-mist"
+                    msg.role === "user" ? "bg-sonar/30 text-sonar" : "bg-sonar/10 text-mist"
                   }`}
                 >
                   {msg.content}
@@ -280,7 +271,7 @@ export default function AIPage() {
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-white/10 px-4 py-3 rounded-2xl">
+                <div className="bg-sonar/10 px-4 py-3 rounded-2xl">
                   <div className="flex gap-1">
                     <div className="w-2 h-2 bg-mist/60 rounded-full animate-bounce" />
                     <div className="w-2 h-2 bg-mist/60 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
@@ -295,9 +286,9 @@ export default function AIPage() {
       </div>
 
       {/* INPUT - FIXED BOTTOM */}
-      <div className="fixed bottom-20 inset-x-0 border-t border-sonar/10 bg-deep p-4">
-        <div className="flex gap-2">
-          <div className="flex-1 flex items-center gap-2 bg-white/5 border border-sonar/20 rounded-full px-4 py-3">
+      <div className="fixed bottom-20 inset-x-0 border-t border-sonar/20 bg-deep px-4 py-4">
+        <div className="max-w-2xl mx-auto flex gap-3">
+          <div className="flex-1 flex items-center gap-2 bg-sonar/10 border border-sonar/30 rounded-full px-4 py-3">
             <input
               type="text"
               value={input}
@@ -309,8 +300,10 @@ export default function AIPage() {
             />
             <button
               onClick={toggleVoice}
-              className={`p-1.5 rounded-lg transition ${
-                listening ? "bg-red-500/30 text-red-400 animate-pulse" : "text-mist/60 hover:text-mist"
+              className={`p-2 rounded-lg transition ${
+                listening
+                  ? "bg-red-500/30 text-red-400 animate-pulse"
+                  : "text-mist/60 hover:text-mist hover:bg-white/5"
               }`}
             >
               <Mic size={18} />
@@ -320,17 +313,15 @@ export default function AIPage() {
           <button
             onClick={() => sendMessage(input)}
             disabled={loading || !input.trim() || !currentChat}
-            className="p-3 bg-sonar/25 hover:bg-sonar/35 disabled:opacity-50 rounded-full text-sonar transition"
+            className="p-3 bg-sonar/30 hover:bg-sonar/40 disabled:opacity-50 rounded-full text-sonar transition"
           >
             <Send size={18} />
           </button>
         </div>
       </div>
 
-      {/* MOBILE OVERLAY */}
-      {showSidebar && (
-        <div className="fixed inset-0 bg-black/50 z-30" onClick={() => setShowSidebar(false)} />
-      )}
+      {/* OVERLAY */}
+      {showSidebar && <div className="fixed inset-0 bg-black/50 z-30" onClick={() => setShowSidebar(false)} />}
     </div>
   );
 }
