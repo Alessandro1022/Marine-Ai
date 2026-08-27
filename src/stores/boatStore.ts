@@ -24,6 +24,7 @@ interface BoatState {
   updateBoat: (id: string, updates: Partial<Boat>) => void;
   primaryBoat: () => Boat | undefined;
   setPrimaryBoat: (id: string) => void;
+  load: () => Promise<void>;
 }
 
 export const useBoatStore = create<BoatState>((set, get) => ({
@@ -54,6 +55,23 @@ export const useBoatStore = create<BoatState>((set, get) => ({
   setPrimaryBoat: (id) => {
     set({ primaryBoatId: id });
   },
+
+  load: async () => {
+    const saved = localStorage.getItem('marivio_boats');
+    if (saved) {
+      try {
+        const boats = JSON.parse(saved);
+        set({ boats, primaryBoatId: boats[0]?.id || null });
+      } catch (error) {
+        console.error('Error loading boats:', error);
+        // Initialize with mock data if load fails
+        initializeBoatStore();
+      }
+    } else {
+      // Initialize with mock data
+      initializeBoatStore();
+    }
+  },
 }));
 
 // Mock data
@@ -77,4 +95,6 @@ export function initializeBoatStore() {
     boats: [mockBoat],
     primaryBoatId: mockBoat.id,
   });
+
+  localStorage.setItem('marivio_boats', JSON.stringify([mockBoat]));
 }
