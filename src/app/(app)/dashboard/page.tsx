@@ -26,7 +26,7 @@ const { data: forecast } = useForecast(lat || 57.7089, lon || 11.9746);
       {/* HEADER */}
       <div>
         <h1 className="text-3xl font-bold text-mist">
-          Välkommen, {profile?.name || "Kapten"}!
+Välkommen, {profile?.full_name || profile?.email?.split('@')[0] || "Kapten"}!
         </h1>
         <p className="text-mist/60 text-sm">MARIVIO Dashboard</p>
       </div>
