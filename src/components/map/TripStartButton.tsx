@@ -11,7 +11,7 @@ export function TripStartButton() {
   const { activeTrip, startTrip, endTrip, isRecording } = useTripStore();
   const [isLoading, setIsLoading] = useState(false);
 
-  useTrip(); // Initialize GPS tracking
+  useTrip();
 
   async function handleStart() {
     if (!lat || !lon) {
@@ -51,7 +51,7 @@ export function TripStartButton() {
   return (
     <button
       onClick={handleStart}
-      className="absolute bottom-20 right-3 z-40 px-4 py-3 bg-sonar/30 hover:bg-sonar/40 text-sonar rounded-full font-semibold flex items-center gap-2 transition"
+      className="absolute bottom-20 right-3 z-40 px-4 py-3 bg-green-500/30 hover:bg-green-500/40 text-green-400 rounded-full font-semibold flex items-center gap-2 transition"
     >
       <Play size={16} />
       STARTA RESA

@@ -17,9 +17,6 @@ export function useAIMemory() {
       avgSpeed: trips.length > 0 
         ? trips.reduce((sum, t) => sum + t.avgSpeedKn, 0) / trips.length
         : 0,
-      favoriteAreas: trips.length > 0 
-        ? getFavoriteAreas(trips)
-        : [],
     };
 
     const boatInfo = boat ? {
@@ -59,18 +56,4 @@ export function useAIMemory() {
   }, [boat, trips, activeTrip]);
 
   return context;
-}
-
-function getFavoriteAreas(trips: any[]) {
-  const areas: { [key: string]: number } = {};
-  
-  trips.forEach(trip => {
-    const key = `${Math.round(trip.startLat * 10) / 10},${Math.round(trip.startLon * 10) / 10}`;
-    areas[key] = (areas[key] || 0) + 1;
-  });
-
-  return Object.entries(areas)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([coords, count]) => ({ coords, visits: count }));
 }

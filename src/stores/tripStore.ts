@@ -6,7 +6,6 @@ export interface TripPoint {
   timestamp: number;
   sogKn: number;
   cogDeg: number;
-  fuelPercent?: number;
 }
 
 export interface Trip {
@@ -23,7 +22,6 @@ export interface Trip {
   durationMinutes: number;
   avgSpeedKn: number;
   maxSpeedKn: number;
-  fuelUsedLiters?: number;
   notes?: string;
 }
 
@@ -102,21 +100,8 @@ export const useTripStore = create<TripState>((set, get) => ({
       maxSpeedKn: Math.round(maxSpeed * 10) / 10,
     };
 
-    // Save to localStorage
     const allTrips = [completed, ...state.trips];
     localStorage.setItem('marivio_trips', JSON.stringify(allTrips));
-
-    // TODO: Save to Supabase
-    try {
-      const response = await fetch('/api/trips', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(completed),
-      });
-      if (!response.ok) console.error('Failed to save trip to Supabase');
-    } catch (error) {
-      console.error('Error saving trip:', error);
-    }
 
     set({
       activeTrip: null,
@@ -137,7 +122,7 @@ export const useTripStore = create<TripState>((set, get) => ({
 }));
 
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 3440.065; // Nautical miles
+  const R = 3440.065;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = Math.sin(dLat/2) * Math.sin(dLat/2) +

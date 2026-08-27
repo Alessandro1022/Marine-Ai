@@ -13,7 +13,6 @@ export function useTrip() {
       return;
     }
 
-    // Add GPS point every 10 seconds
     intervalRef.current = setInterval(() => {
       if (lat && lon) {
         const point: TripPoint = {

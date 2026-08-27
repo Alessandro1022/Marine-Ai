@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { type Trip } from "@/stores/tripStore";
-import { MapPin, Clock, Wind, Anchor } from "lucide-react";
+import { Clock, Wind, Anchor } from "lucide-react";
 
 interface TripCardProps {
   trip: Trip;

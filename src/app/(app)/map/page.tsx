@@ -1,21 +1,18 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { LoadingScreen } from "@/components/ui/LoadingScreen";
-import { useT } from "@/lib/i18n";
+import { TripStartButton } from "@/components/map/TripStartButton";
 
-const MarineMap = dynamic(() => import("@/components/map/MarineMap"), {
+const MarineMap = dynamic(() => import("@/components/map/MarineMap").then(mod => ({ default: mod.MarineMap })), {
   ssr: false,
-  loading: () => <LoadingScreen />,
+  loading: () => <div className="h-full bg-deep animate-pulse" />,
 });
 
 export default function MapPage() {
-  const t = useT();
   return (
-    <div>
-      <PageHeader title={t("chart.title")} subtitle={t("chart.subtitle")} />
+    <div className="h-screen relative">
       <MarineMap />
+      <TripStartButton />
     </div>
   );
 }

@@ -64,17 +64,14 @@ export const useBoatStore = create<BoatState>((set, get) => ({
         set({ boats, primaryBoatId: boats[0]?.id || null });
       } catch (error) {
         console.error('Error loading boats:', error);
-        // Initialize with mock data if load fails
         initializeBoatStore();
       }
     } else {
-      // Initialize with mock data
       initializeBoatStore();
     }
   },
 }));
 
-// Mock data
 export function initializeBoatStore() {
   const mockBoat: Boat = {
     id: "boat-1",

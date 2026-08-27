@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Cloud, Anchor, MapPin, Wind, Waves } from "lucide-react";
+import { Cloud, Anchor, MapPin, Wind } from "lucide-react";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useWeather } from "@/hooks/useWeather";
 import { useForecast } from "@/hooks/useForecast";
@@ -25,15 +25,12 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 p-4 pb-28">
-      {/* HEADER */}
       <div>
         <h1 className="text-3xl font-bold text-mist">MARIVIO</h1>
         <p className="text-mist/60 text-sm">Din AI Sjöfartsassistent</p>
       </div>
 
-      {/* STATS GRID */}
       <div className="grid grid-cols-2 gap-3">
-        {/* POSITION */}
         <div className="bg-sonar/10 border border-sonar/20 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <MapPin size={16} className="text-sonar" />
@@ -45,7 +42,6 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* TEMPERATURE */}
         {weather && (
           <div className="bg-sonar/10 border border-sonar/20 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -58,7 +54,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* WIND */}
         {weather && (
           <div className="bg-sonar/10 border border-sonar/20 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -74,7 +69,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* BOAT */}
         {primaryBoat && (
           <div className="bg-sonar/10 border border-sonar/20 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -87,12 +81,11 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* FORECAST */}
       {forecast && forecast.hourly && forecast.hourly.length > 0 && (
         <div>
           <h2 className="text-lg font-semibold text-mist mb-3">Väderprognos (24h)</h2>
           <div className="space-y-2">
-            {forecast.hourly.slice(0, 4).map((hour, idx) => (
+            {forecast.hourly.slice(0, 4).map((hour: any, idx: number) => (
               <div key={idx} className="bg-sonar/5 border border-sonar/20 rounded-lg p-3">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-mist/60">
@@ -111,7 +104,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* ACTIONS */}
       <div className="space-y-2">
         <a
           href="/map"

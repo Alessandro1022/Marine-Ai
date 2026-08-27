@@ -28,13 +28,12 @@ export function useGeolocation() {
           lat: latitude,
           lon: longitude,
           heading: heading || null,
-          speed: speed ? speed * 1.94384 : null, // m/s to knots
+          speed: speed ? speed * 1.94384 : null,
           accuracy: accuracy,
         });
       },
       (error) => {
         console.error('Geolocation error:', error);
-        // Fallback to Göteborg coordinates
         setGeo({
           lat: 57.7089,
           lon: 11.9746,

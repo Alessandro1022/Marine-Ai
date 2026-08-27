@@ -1,55 +1,54 @@
-# Empire Marine AI
+# MARIVIO - FAS 1, 2, 3 CLEAN
 
-Your intelligent marine assistant — weather, routes, fuel, maintenance and AI guidance for boaters.
+## Installation
 
-© Aetos Systems
+1. Unzip denna fil i repo root
+2. `git add .`
+3. `git commit -m "feat: FAS 1-3 complete - strava + ai brain"`
+4. `git push`
 
-## Stack
-- Next.js 15 (App Router) + TypeScript
-- Tailwind CSS v3 (do NOT upgrade to v4)
-- React 18 (do NOT upgrade to 19)
-- Supabase (Auth, PostgreSQL, Storage)
-- Zustand + TanStack React Query
-- Leaflet (maps) — no API key required
-- Open-Meteo (weather + marine) — no API key required
-- AI abstraction layer: Gemini + OpenAI
-- PWA: manifest + service worker (installable, ready for WKWebView wrapping)
+## Files Structure (CORRECT)
 
-## Setup (GitHub web UI + Vercel flow)
+### Routes (INSIDE (app) group - NO ROOT DUPLICATES)
+- `src/app/(app)/map/page.tsx` ← Map with STARTA/AVSLUTA
+- `src/app/(app)/ai/page.tsx` ← Smart AI co-pilot
+- `src/app/(app)/dashboard/page.tsx` ← Dashboard with weather
+- `src/app/(app)/trips/page.tsx` ← Trip history (Strava-style)
+- `src/app/(app)/trips/[id]/page.tsx` ← Trip detail page
 
-1. **Create GitHub repo** and upload/paste all project files.
-2. **Supabase**: create a new project → SQL Editor → run `supabase/schema.sql` once.
-3. **Supabase Auth**: Authentication → URL Configuration → set Site URL to your Vercel URL. Email confirmations on/off as preferred.
-4. **Vercel**: import the repo. Framework preset: Next.js. Add environment variables:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `GEMINI_API_KEY` (server-side only)
-   - `OPENAI_API_KEY` (optional)
-   - `AI_PROVIDER` = `gemini`
-5. Deploy. The app is installable as a PWA from the browser (Add to Home Screen).
+### Stores
+- `src/stores/tripStore.ts` ← Trip state management
+- `src/stores/boatStore.ts` ← Boat info + memory
 
-## Important constraints
+### Hooks
+- `src/hooks/useTrip.ts` ← GPS tracking during trip
+- `src/hooks/useGeolocation.ts` ← GPS location
+- `src/hooks/useAIMemory.ts` ← AI context builder
 
-- **Never commit API keys.** AI keys live only in Vercel env vars and are used in `/api` routes (server-side).
-- Tailwind stays on v3.x. v4 breaks the layout system.
-- React stays on 18.x to avoid dependency conflicts.
+### Components
+- `src/components/map/MarineMap.tsx` ← OSM + seamarks (FIXED)
+- `src/components/map/TripStartButton.tsx` ← Start/Stop button
+- `src/components/TripCard.tsx` ← Trip card display
 
-## Structur
+### AI
+- `src/lib/ai/systemPrompt.ts` ← AI instructions
+
+## What's Fixed
+
+✅ NO duplicate pages in root (ai/page, map/page deleted)
+✅ Correct [id] format (no backslashes)
+✅ Dashboard included with correct properties
+✅ All properties verified against actual types
+✅ useGeolocation without isFallback
+✅ Boat store uses `type` not `boat_type`
+✅ Weather uses `temperature_c`, `wind_speed_ms`, `wind_direction_deg`
+✅ Forecast uses `.hourly` array with correct properties
+
+## Deploy
+
+```bash
+git push
+# Vercel builds automatically
 ```
-src/
-  app/            Screens (App Router)
-  components/     UI components
-  lib/            Supabase clients, i18n, services
-  locales/        sv + en translations (all text uses keys)
-  stores/         Zustand stores
-  types/          Domain types
-supabase/
-  schema.sql      Full database schema + RLS + seed marinas
-public/
-  manifest.json   PWA manifest
-  sw.js           Service worker
-```
 
-## Languages
-
-Swedish (default) + English. Automatic browser detection, manual switcher, persisted in localStorage. All UI text uses translation keys — no hardcoded strings.
+Ready to test!
