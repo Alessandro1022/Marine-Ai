@@ -4,11 +4,9 @@ import { useTripStore } from "@/stores/tripStore";
 import { notFound } from "next/navigation";
 import { MapPin, Clock, Wind, Anchor, Share2 } from "lucide-react";
 
-interface Props {
-  params: { id: string };
-}
-
-export default function TripDetailPage({ params }: Props) {
+export default function TripDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
   const trip = useTripStore((s) => s.getTripById(params.id));
 
   if (!trip) notFound();
