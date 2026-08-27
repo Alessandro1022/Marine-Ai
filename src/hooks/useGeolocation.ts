@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-interface GeolocationData {
+export interface GeolocationData {
   lat: number | null;
   lon: number | null;
   heading: number | null;
@@ -34,6 +34,14 @@ export function useGeolocation() {
       },
       (error) => {
         console.error('Geolocation error:', error);
+        // Fallback to Göteborg coordinates
+        setGeo({
+          lat: 57.7089,
+          lon: 11.9746,
+          heading: null,
+          speed: null,
+          accuracy: null,
+        });
       },
       {
         enableHighAccuracy: true,
