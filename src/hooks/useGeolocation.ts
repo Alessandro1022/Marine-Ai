@@ -1,25 +1,49 @@
-"use client";
+import { useEffect, useState } from 'react';
 
-import { useEffect, useState } from "react";
-
-// Default: Stockholm archipelago
-const FALLBACK = { lat: 59.32, lon: 18.55 };
+interface GeolocationData {
+  lat: number | null;
+  lon: number | null;
+  heading: number | null;
+  speed: number | null;
+  accuracy: number | null;
+}
 
 export function useGeolocation() {
-  const [position, setPosition] = useState<{ lat: number; lon: number }>(FALLBACK);
-  const [isFallback, setIsFallback] = useState(true);
+  const [geo, setGeo] = useState<GeolocationData>({
+    lat: null,
+    lon: null,
+    heading: null,
+    speed: null,
+    accuracy: null,
+  });
 
   useEffect(() => {
-    if (!("geolocation" in navigator)) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setPosition({ lat: pos.coords.latitude, lon: pos.coords.longitude });
-        setIsFallback(false);
+    if (!navigator.geolocation) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude, heading, speed, accuracy } = position.coords;
+        
+        setGeo({
+          lat: latitude,
+          lon: longitude,
+          heading: heading || null,
+          speed: speed ? speed * 1.94384 : null, // m/s to knots
+          accuracy: accuracy,
+        });
       },
-      () => setIsFallback(true),
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300_000 }
+      (error) => {
+        console.error('Geolocation error:', error);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 5000,
+      }
     );
+
+    return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  return { ...position, isFallback };
+  return geo;
 }
