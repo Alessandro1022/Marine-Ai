@@ -13,7 +13,7 @@ export default function FuelPage() {
   const boat = useBoatStore((s) => s.primaryBoat());
   const fuelPrice = useSettingsStore((s) => s.fuelPriceSek);
   const [distance, setDistance] = useState("");
-  const [boatType, setBoatType] = useState(boat?.type ?? "Motorsegelyacht");
+  const [boatType, setBoatType] = useState<BoatType>("motorboat");;
   const [speed, setSpeed] = useState("18");
   const [result, setResult] = useState<FuelEstimate | null>(null);
 
