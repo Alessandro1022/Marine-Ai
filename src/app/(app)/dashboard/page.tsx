@@ -102,7 +102,7 @@ export default function DashboardPage() {
                     })}
                   </span>
                   <span className="text-sm text-sonar font-semibold">
-                    {Math.round(hour.temperature)}°C
+                    {Math.round(hour.temperature_c)}°C
                   </span>
                 </div>
               </div>
