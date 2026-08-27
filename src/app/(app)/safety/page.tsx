@@ -2,25 +2,27 @@
 
 import { useState } from "react";
 import { ShieldAlert, Phone, CheckSquare, Square } from "lucide-react";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useWeather } from "@/hooks/useWeather";
 import { useBoatStore } from "@/stores/boatStore";
-import { useT } from "@/lib/i18n";
+
+const GÖTEBORG = { lat: 57.7089, lon: 11.9746 };
 
 const CHECKLIST_KEYS = [
-  "safety.check1",
-  "safety.check2",
-  "safety.check3",
-  "safety.check4",
-  "safety.check5",
-  "safety.check6",
+  "PFD för alla",
+  "Livslinor säkrade",
+  "Radiokontakt funkar",
+  "Navigationsutrustning OK",
+  "Säkerhetsutrustning kontrollerad",
+  "Väderrapport noterad",
 ];
 
 export default function SafetyPage() {
-  const t = useT();
   const { lat, lon } = useGeolocation();
-  const { data: weather } = useWeather(lat, lon);
+  const finalLat = lat || GÖTEBORG.lat;
+  const finalLon = lon || GÖTEBORG.lon;
+  
+  const { data: weather } = useWeather(finalLat, finalLon);
   const boat = useBoatStore((s) => s.primaryBoat());
   const [checked, setChecked] = useState<Set<string>>(new Set());
 
@@ -34,80 +36,135 @@ export default function SafetyPage() {
   }
 
   const warnings: { text: string; level: "yellow" | "red" }[] = [];
-  if (weather?.risk === "red") warnings.push({ text: t("home.riskRed"), level: "red" });
-  if (weather?.risk === "yellow") warnings.push({ text: t("home.riskYellow"), level: "yellow" });
-  if (boat && boat.fuel_level_percent < 25)
-    warnings.push({ text: t("safety.lowFuel"), level: "yellow" });
+  
+  if (weather?.risk === "red") {
+    warnings.push({ text: "🔴 Högt väderriskreferens", level: "red" });
+  }
+  if (weather?.risk === "yellow") {
+    warnings.push({ text: "🟡 Måttligt väderriskreferens", level: "yellow" });
+  }
 
   return (
-    <div>
-      <PageHeader title={t("safety.title")} />
+    <div className="space-y-6 p-4 pb-28">
+      {/* HEADER */}
+      <div>
+        <h1 className="text-3xl font-bold text-mist mb-2">Säkerhet</h1>
+        <p className="text-mist/60 text-sm">Pre-trip checklista</p>
+      </div>
 
-      {warnings.length > 0 ? (
-        <div className="mb-4 flex flex-col gap-2.5">
+      {/* WARNINGS */}
+      {warnings.length > 0 && (
+        <div className="space-y-2">
           {warnings.map((w, i) => (
             <div
               key={i}
-              className={`glass-card flex items-center gap-3 p-4 ${
-                w.level === "red" ? "border-risk-red/50" : "border-risk-yellow/50"
+              className={`p-4 rounded-lg border flex items-center gap-3 ${
+                w.level === "red"
+                  ? "bg-red-500/10 border-red-500/20"
+                  : "bg-yellow-500/10 border-yellow-500/20"
               }`}
             >
-              <ShieldAlert size={18} className={w.level === "red" ? "text-risk-red" : "text-risk-yellow"} />
-              <p className="text-sm">{w.text}</p>
+              <ShieldAlert
+                size={18}
+                className={w.level === "red" ? "text-red-500" : "text-yellow-500"}
+              />
+              <p className="text-sm text-mist">{w.text}</p>
             </div>
           ))}
         </div>
-      ) : null}
+      )}
 
-      {/* SOS */}
-      <section className="holo-panel p-5">
-        <span className="instrument-label">{t("safety.sos")}</span>
-        <a href="tel:112" className="mt-3 flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-risk-red/15 text-risk-red animate-pulse-sonar">
-            <Phone size={20} />
-          </span>
-          <div>
-            <p className="instrument text-2xl text-risk-red">112</p>
-            <p className="text-xs text-mist">{t("safety.sosNumber")}</p>
-          </div>
+      {/* SOS BUTTON */}
+      <div className="bg-sonar/10 border border-sonar/20 rounded-lg p-4">
+        <p className="text-xs text-mist/50 mb-3">NÖDSIGNAL</p>
+        <a
+          href="tel:112"
+          className="block p-4 bg-red-500/20 hover:bg-red-500/30 rounded-lg border border-red-500/30 text-center transition"
+        >
+          <p className="text-3xl font-bold text-red-500 mb-1">112</p>
+          <p className="text-sm text-mist">Ring omedelbar hjälp</p>
         </a>
-      </section>
+      </div>
 
-      {/* Emergency checklist */}
-      <section className="mt-4">
-        <span className="instrument-label">{t("safety.emergencyChecklist")}</span>
-        <div className="mt-2 flex flex-col gap-2">
+      {/* EMERGENCY CONTACTS */}
+      <div>
+        <h2 className="text-lg font-semibold text-mist mb-3">Nödkontakter</h2>
+        <div className="space-y-2">
+          <Contact name="Svenska Räddningsverket (JRCC)" number="112" />
+          <Contact name="SSRS (Sjöfartsverket)" number="077-579 00 90" />
+          <Contact name="VHF Nödsignal" number="Kanal 16" />
+        </div>
+      </div>
+
+      {/* SAFETY CHECKLIST */}
+      <div>
+        <h2 className="text-lg font-semibold text-mist mb-3">Säkerhetschecklista</h2>
+        <div className="space-y-2">
           {CHECKLIST_KEYS.map((key) => (
-            <button key={key} onClick={() => toggle(key)} className="glass-card flex items-center gap-3 p-3.5 text-left">
+            <button
+              key={key}
+              onClick={() => toggle(key)}
+              className="w-full p-3 bg-sonar/5 border border-sonar/20 rounded-lg hover:bg-sonar/10 transition flex items-center gap-3 text-left"
+            >
               {checked.has(key) ? (
-                <CheckSquare size={18} className="shrink-0 text-sonar" />
+                <CheckSquare size={18} className="text-sonar flex-shrink-0" />
               ) : (
-                <Square size={18} className="shrink-0 text-mist" />
+                <Square size={18} className="text-mist/40 flex-shrink-0" />
               )}
-              <span className={`text-sm ${checked.has(key) ? "text-mist line-through" : ""}`}>{t(key)}</span>
+              <span
+                className={`text-sm ${
+                  checked.has(key)
+                    ? "text-mist/50 line-through"
+                    : "text-mist"
+                }`}
+              >
+                {key}
+              </span>
             </button>
           ))}
         </div>
-      </section>
+        {checked.size === CHECKLIST_KEYS.length && (
+          <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
+            <p className="text-sm text-green-500 font-semibold">✓ Alla kontroller klara!</p>
+          </div>
+        )}
+      </div>
 
-      {/* Contacts */}
-      <section className="mt-4">
-        <span className="instrument-label">{t("safety.emergencyContacts")}</span>
-        <div className="mt-2 flex flex-col gap-2">
-          <Contact name={t("safety.contactJrcc")} number="112" />
-          <Contact name={t("safety.contactSsrs")} number="077-579 00 90" />
-          <Contact name={t("safety.contactVhf")} number="VHF 16" />
+      {/* BOAT INFO */}
+      {boat && (
+        <div>
+          <h2 className="text-lg font-semibold text-mist mb-3">Båtinformation</h2>
+          <div className="bg-sonar/5 border border-sonar/20 rounded-lg p-4 space-y-2">
+            <div>
+              <p className="text-xs text-mist/50">Båt</p>
+              <p className="text-sm text-mist font-semibold">{boat.name}</p>
+            </div>
+            <div>
+              <p className="text-xs text-mist/50">Typ</p>
+              <p className="text-sm text-mist">{boat.type}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <div>
+                <p className="text-xs text-mist/50">Längd</p>
+                <p className="text-sm text-mist">{boat.length_m}m</p>
+              </div>
+              <div>
+                <p className="text-xs text-mist/50">Bränsletank</p>
+                <p className="text-sm text-mist">{boat.fuel_capacity_liters}L</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
+      )}
     </div>
   );
 }
 
 function Contact({ name, number }: { name: string; number: string }) {
   return (
-    <div className="glass-card flex items-center justify-between p-3.5">
-      <span className="text-sm">{name}</span>
-      <span className="instrument text-sm text-sonar">{number}</span>
+    <div className="p-3 bg-sonar/5 border border-sonar/20 rounded-lg flex items-center justify-between">
+      <span className="text-sm text-mist">{name}</span>
+      <span className="text-sm text-sonar font-semibold">{number}</span>
     </div>
   );
 }
