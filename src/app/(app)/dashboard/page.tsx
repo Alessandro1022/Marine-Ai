@@ -53,8 +53,8 @@ const { data: forecast } = useForecast(lat || 57.7089, lon || 11.9746);
               <Cloud size={16} className="text-sonar" />
               <p className="text-xs text-mist/50">Väder</p>
             </div>
-            <p className="text-sm text-mist">{Math.round(weather.temp)}°C</p>
-            <p className="text-xs text-mist/70">{weather.description}</p>
+            <p className="text-sm text-mist">{Math.round(weather.temperature_c)}°C</p>
+            <p className="text-xs text-mist/70">Väder OK</p>
           </div>
         )}
 
@@ -64,8 +64,8 @@ const { data: forecast } = useForecast(lat || 57.7089, lon || 11.9746);
               <Wind size={16} className="text-sonar" />
               <p className="text-xs text-mist/50">Vind</p>
             </div>
-            <p className="text-sm text-mist">{Math.round(weather.wind_speed)} m/s</p>
-            <p className="text-xs text-mist/70">{weather.wind_direction}°</p>
+            <p className="text-sm text-mist">{Math.round(weather.wind_speed_ms)} m/s</p>
+            <p className="text-xs text-mist/70">{Math.round(weather.wind_direction_deg)}°</p>
           </div>
         )}
 
