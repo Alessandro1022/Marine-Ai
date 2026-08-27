@@ -14,8 +14,8 @@ export default function DashboardPage() {
   const profile = useAuthStore((s) => s.profile);
   const primaryBoat = useBoatStore((s) => s.primaryBoat());
   const { lat, lon } = useGeolocation();
-  const { data: weather } = useWeather(lat, lon);
-  const { data: forecast } = useForecast(lat, lon);
+const { data: weather } = useWeather(lat || 57.7089, lon || 11.9746);
+const { data: forecast } = useForecast(lat || 57.7089, lon || 11.9746);
 
   useEffect(() => {
     useBoatStore.getState().load();
