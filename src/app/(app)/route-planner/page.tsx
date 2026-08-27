@@ -41,13 +41,14 @@ export default function RoutePlannerPage() {
   const route = useMemo(() => {
     if (!from || !to || !weather) return null;
     return estimateRoute({
-      fromLat: from.latitude,
-      fromLon: from.longitude,
-      toLat: to.latitude,
-      toLon: to.longitude,
-      fuelPriceSek: fuelPrice,
-      weatherRisk: weather.risk,
-    });
+  fromLat: from.latitude,
+  fromLon: from.longitude,
+  toLat: to.latitude,
+  toLon: to.longitude,
+  boat: null,  // ← Pass null, it's allowed
+  fuelPriceSek: fuelPrice,
+  weatherRisk: weather.risk,
+});
   }, [from, to, weather, boat, fuelPrice]);
 
   async function analyze() {
