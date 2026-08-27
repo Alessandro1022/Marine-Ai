@@ -45,7 +45,7 @@ export default function RoutePlannerPage() {
       fromLon: from.longitude,
       toLat: to.latitude,
       toLon: to.longitude,
-      boat,
+      boat || null,
       fuelPriceSek: fuelPrice,
       weatherRisk: weather.risk,
     });
