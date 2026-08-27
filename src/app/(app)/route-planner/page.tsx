@@ -55,7 +55,7 @@ export default function RoutePlannerPage() {
     if (!route || !from || !to || analyzing) return;
     setAnalyzing(true);
     setAnalysis("");
-    const context = `Route: ${from.name} → ${to.name}. Distance ${route.distance_nm} nm, ETA ${formatEta(route.eta_minutes)}, fuel estimate ${route.fuel_liters} L. Weather at midpoint: wind ${weather?.wind_speed_ms} m/s, waves ${weather?.wave_height_m ?? "?"} m, visibility ${weather?.visibility_m ?? "?"} m, risk ${route.risk}. Boat: ${boat ? `${boat.boat_type}, ${boat.cruise_speed_knots ?? "?"} kn, tank ${boat.fuel_capacity_liters ?? "?"} L` : "unknown"}.`;
+const context = `Route: ${from.name} → ${to.name}. Distance ${route.distance_nm} nm, ETA ${formatEta(route.eta_minutes)}, fuel estimate ${route.fuel_liters} L. Weather: wind ${weather?.wind_speed_ms} m/s, waves ${weather?.wave_height_m ?? "?"} m, risk ${route.risk}.`;
     let text = "";
     try {
       await streamChat({
