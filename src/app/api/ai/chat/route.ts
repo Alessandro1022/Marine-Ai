@@ -1,199 +1,77 @@
-"use client";
+import { NextRequest, NextResponse } from "next/server";
 
-import { useState, useRef, useEffect } from "react";
-import { Send, Mic, Loader } from "lucide-react";
-import { useAIMemory } from "@/hooks/useAIMemory";
-import { buildSystemPrompt } from "@/lib/ai/systemPrompt";
+export async function POST(request: NextRequest) {
+  try {
+    const { messages, context, locale } = await request.json();
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
+    if (!messages || !Array.isArray(messages)) {
+      return NextResponse.json(
+        { error: "Invalid messages format" },
+        { status: 400 }
+      );
+    }
+
+    if (!context) {
+      return NextResponse.json(
+        { error: "Missing context" },
+        { status: 400 }
+      );
+    }
+
+    // Get Anthropic API key
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      console.error("ANTHROPIC_API_KEY not configured");
+      return NextResponse.json(
+        { error: "AI service not configured" },
+        { status: 500 }
+      );
+    }
+
+    // Call Anthropic API
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-opus-4-8",
+        max_tokens: 1024,
+        system: context,
+        messages: messages.map((m: any) => ({
+          role: m.role,
+          content: m.content,
+        })),
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error("Anthropic API error:", error);
+      return NextResponse.json(
+        { error: "Failed to get response from AI" },
+        { status: 500 }
+      );
+    }
+
+    const data = await response.json();
+    const text =
+      data.content?.[0]?.type === "text" ? data.content[0].text : "";
+
+    // Return as plain text, not JSON
+    return new NextResponse(text, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    });
+  } catch (error: any) {
+    console.error("API Error:", error);
+    return NextResponse.json(
+      { error: error.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
 }
-
-export default function AIPage() {
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [listening, setListening] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
-  const aiMemory = useAIMemory();
-
-  // Voice setup
-  useEffect(() => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.lang = "sv-SE";
-      recognitionRef.current.onstart = () => setListening(true);
-      recognitionRef.current.onend = () => setListening(false);
-      recognitionRef.current.onresult = (event: any) => {
-        const text = Array.from(event.results)
-          .map((r: any) => r[0].transcript)
-          .join("");
-        setInput(text);
-      };
-    }
-  }, []);
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  async function sendMessage() {
-    if (!input.trim() || loading) return;
-
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input,
-    };
-
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    setInput("");
-    setLoading(true);
-
-    try {
-      // Format för route.ts
-      const context = buildSystemPrompt(aiMemory);
-
-      const response = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: newMessages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-          locale: "sv",
-          context,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      // Response är text stream, inte JSON!
-      const text = await response.text();
-
-      const assistantMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: text,
-      };
-
-      setMessages((prev) => [...prev, assistantMsg]);
-    } catch (error) {
-      console.error("Error:", error);
-      const errorMsg: Message = {
-        id: (Date.now() + 2).toString(),
-        role: "assistant",
-        content: "Kunde inte få svar från AI. Försök igen senare.",
-      };
-      setMessages((prev) => [...prev, errorMsg]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function toggleVoice() {
-    if (recognitionRef.current) {
-      if (listening) {
-        recognitionRef.current.stop();
-      } else {
-        recognitionRef.current.start();
-      }
-    }
-  }
-
-  return (
-    <div className="space-y-4 p-4 pb-28 h-screen flex flex-col">
-      {/* HEADER */}
-      <div>
-        <h1 className="text-2xl font-bold text-mist">MARIVIO AI</h1>
-        <p className="text-mist/60 text-sm">Din sjöfartsassistent</p>
-      </div>
-
-      {/* MESSAGES AREA */}
-      <div className="flex-1 overflow-y-auto space-y-3 min-h-96">
-        {messages.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-mist/60 text-sm">
-              Hej! Fråga mig om väder, vägar, säkerhet eller sjöfartsrelaterat
-            </p>
-          </div>
-        )}
-
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`px-4 py-2 rounded-lg text-sm max-w-xs ${
-                msg.role === "user"
-                  ? "bg-sonar/30 text-sonar"
-                  : "bg-sonar/10 text-mist"
-              }`}
-            >
-              {msg.content}
-            </div>
-          </div>
-        ))}
-
-        {loading && (
-          <div className="flex justify-start">
-            <div className="px-4 py-2 rounded-lg bg-sonar/10 text-mist flex items-center gap-2">
-              <Loader size={16} className="animate-spin" />
-              <span className="text-sm">Skriver...</span>
-            </div>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* INPUT AREA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-deep border-t border-sonar/20 p-4">
-        <div className="max-w-2xl mx-auto flex gap-2">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-            placeholder={listening ? "Lyssnar..." : "Fråga något..."}
-            disabled={loading}
-            className="flex-1 bg-white/5 border border-sonar/20 rounded-full px-4 py-3 text-mist placeholder:text-mist/40 disabled:opacity-50"
-          />
-
-          <button
-            onClick={toggleVoice}
-            disabled={loading}
-            className={`p-3 rounded-full transition disabled:opacity-50 ${
-              listening
-                ? "bg-red-500/30 text-red-400"
-                : "bg-sonar/25 text-sonar hover:bg-sonar/35"
-            }`}
-            title={listening ? "Lyssnar..." : "Aktivera röst"}
-          >
-            <Mic size={18} />
-          </button>
-
-          <button
-            onClick={sendMessage}
-            disabled={loading || !input.trim()}
-            className="p-3 bg-sonar/25 hover:bg-sonar/35 text-sonar rounded-full transition disabled:opacity-50"
-            title="Skicka"
-          >
-            <Send size={18} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}}
