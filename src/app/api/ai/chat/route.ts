@@ -1,141 +1,199 @@
-import { NextRequest } from "next/server";
+"use client";
 
-export const runtime = "nodejs";
-export const maxDuration = 60;
+import { useState, useRef, useEffect } from "react";
+import { Send, Mic, Loader } from "lucide-react";
+import { useAIMemory } from "@/hooks/useAIMemory";
+import { buildSystemPrompt } from "@/lib/ai/systemPrompt";
 
-type Msg = { role: "user" | "assistant"; content: string };
-
-function systemPrompt(locale: string, context?: string) {
-  const lang = locale === "sv" ? "Swedish" : "English";
-  return [
-    "You are Empire Marine AI, an expert marine assistant for recreational boaters in Scandinavia.",
-    "You help with weather assessment, route planning, fuel estimation, engine maintenance, seamanship, safety and fishing.",
-    "Be concise, practical and safety-first. Use metric units, knots and nautical miles.",
-    "If conditions sound dangerous, clearly advise caution.",
-    `Always answer in ${lang}.`,
-    context ? `Current context:\n${context}` : "",
-  ]
-    .filter(Boolean)
-    .join("\n");
+interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
 }
 
-export async function POST(req: NextRequest) {
-  const { messages, locale = "sv", context } = (await req.json()) as {
-    messages: Msg[];
-    locale?: string;
-    context?: string;
-  };
+export default function AIPage() {
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [listening, setListening] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const aiMemory = useAIMemory();
 
-  const provider = (process.env.AI_PROVIDER ?? "gemini").toLowerCase();
-  const system = systemPrompt(locale, context);
-
-  try {
-    const stream =
-      provider === "openai"
-        ? await streamOpenAI(messages, system)
-        : await streamGemini(messages, system);
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-cache",
-      },
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "ai_error";
-    return Response.json({ error: message }, { status: 500 });
-  }
-}
-
-async function streamGemini(messages: Msg[], system: string) {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new Error("GEMINI_API_KEY missing");
-
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${key}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system }] },
-        contents: messages.map((m) => ({
-          role: m.role === "assistant" ? "model" : "user",
-          parts: [{ text: m.content }],
-        })),
-        generationConfig: { temperature: 0.6, maxOutputTokens: 1024 },
-      }),
+  // Voice setup
+  useEffect(() => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.lang = "sv-SE";
+      recognitionRef.current.onstart = () => setListening(true);
+      recognitionRef.current.onend = () => setListening(false);
+      recognitionRef.current.onresult = (event: any) => {
+        const text = Array.from(event.results)
+          .map((r: any) => r[0].transcript)
+          .join("");
+        setInput(text);
+      };
     }
-  );
-  if (!res.ok || !res.body) throw new Error(`gemini_${res.status}`);
+  }, []);
 
-  return sseToTextStream(res.body, (json) => {
-    const j = json as {
-      candidates?: { content?: { parts?: { text?: string }[] } }[];
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  async function sendMessage() {
+    if (!input.trim() || loading) return;
+
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input,
     };
-    return j?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-  });
-}
 
-async function streamOpenAI(messages: Msg[], system: string) {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) throw new Error("OPENAI_API_KEY missing");
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setInput("");
+    setLoading(true);
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      stream: true,
-      messages: [
-        { role: "system", content: system },
-        ...messages.map((m) => ({ role: m.role, content: m.content })),
-      ],
-    }),
-  });
-  if (!res.ok || !res.body) throw new Error(`openai_${res.status}`);
+    try {
+      // Format för route.ts
+      const context = buildSystemPrompt(aiMemory);
 
-  return sseToTextStream(res.body, (json) => {
-    const j = json as { choices?: { delta?: { content?: string } }[] };
-    return j?.choices?.[0]?.delta?.content ?? "";
-  });
-}
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: newMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+          locale: "sv",
+          context,
+        }),
+      });
 
-function sseToTextStream(
-  body: ReadableStream<Uint8Array>,
-  extract: (json: unknown) => string
-) {
-  const decoder = new TextDecoder();
-  const encoder = new TextEncoder();
-  let buffer = "";
-
-  return new ReadableStream<Uint8Array>({
-    async start(controller) {
-      const reader = body.getReader();
-      try {
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() ?? "";
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed.startsWith("data:")) continue;
-            const payload = trimmed.slice(5).trim();
-            if (payload === "[DONE]") continue;
-            try {
-              const text = extract(JSON.parse(payload));
-              if (text) controller.enqueue(encoder.encode(text));
-            } catch {
-              // skip malformed chunk
-            }
-          }
-        }
-      } finally {
-        controller.close();
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
-    },
-  });
-}
+
+      // Response är text stream, inte JSON!
+      const text = await response.text();
+
+      const assistantMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: text,
+      };
+
+      setMessages((prev) => [...prev, assistantMsg]);
+    } catch (error) {
+      console.error("Error:", error);
+      const errorMsg: Message = {
+        id: (Date.now() + 2).toString(),
+        role: "assistant",
+        content: "Kunde inte få svar från AI. Försök igen senare.",
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function toggleVoice() {
+    if (recognitionRef.current) {
+      if (listening) {
+        recognitionRef.current.stop();
+      } else {
+        recognitionRef.current.start();
+      }
+    }
+  }
+
+  return (
+    <div className="space-y-4 p-4 pb-28 h-screen flex flex-col">
+      {/* HEADER */}
+      <div>
+        <h1 className="text-2xl font-bold text-mist">MARIVIO AI</h1>
+        <p className="text-mist/60 text-sm">Din sjöfartsassistent</p>
+      </div>
+
+      {/* MESSAGES AREA */}
+      <div className="flex-1 overflow-y-auto space-y-3 min-h-96">
+        {messages.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-mist/60 text-sm">
+              Hej! Fråga mig om väder, vägar, säkerhet eller sjöfartsrelaterat
+            </p>
+          </div>
+        )}
+
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+          >
+            <div
+              className={`px-4 py-2 rounded-lg text-sm max-w-xs ${
+                msg.role === "user"
+                  ? "bg-sonar/30 text-sonar"
+                  : "bg-sonar/10 text-mist"
+              }`}
+            >
+              {msg.content}
+            </div>
+          </div>
+        ))}
+
+        {loading && (
+          <div className="flex justify-start">
+            <div className="px-4 py-2 rounded-lg bg-sonar/10 text-mist flex items-center gap-2">
+              <Loader size={16} className="animate-spin" />
+              <span className="text-sm">Skriver...</span>
+            </div>
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* INPUT AREA */}
+      <div className="fixed bottom-0 left-0 right-0 bg-deep border-t border-sonar/20 p-4">
+        <div className="max-w-2xl mx-auto flex gap-2">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+            placeholder={listening ? "Lyssnar..." : "Fråga något..."}
+            disabled={loading}
+            className="flex-1 bg-white/5 border border-sonar/20 rounded-full px-4 py-3 text-mist placeholder:text-mist/40 disabled:opacity-50"
+          />
+
+          <button
+            onClick={toggleVoice}
+            disabled={loading}
+            className={`p-3 rounded-full transition disabled:opacity-50 ${
+              listening
+                ? "bg-red-500/30 text-red-400"
+                : "bg-sonar/25 text-sonar hover:bg-sonar/35"
+            }`}
+            title={listening ? "Lyssnar..." : "Aktivera röst"}
+          >
+            <Mic size={18} />
+          </button>
+
+          <button
+            onClick={sendMessage}
+            disabled={loading || !input.trim()}
+            className="p-3 bg-sonar/25 hover:bg-sonar/35 text-sonar rounded-full transition disabled:opacity-50"
+            title="Skicka"
+          >
+            <Send size={18} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}}
